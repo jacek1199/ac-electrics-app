@@ -72,7 +72,10 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
           open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex items-center justify-between gap-2 px-5 py-5 border-b border-navy-800">
+        <div
+          className="flex items-center justify-between gap-2 px-5 pb-5 border-b border-navy-800"
+          style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top))' }}
+        >
           <div className="flex items-center gap-2.5">
             <img src={logo} alt="A.C. Electrics" className="w-9 h-9" />
             <div className="leading-tight font-head">

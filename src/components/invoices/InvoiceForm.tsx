@@ -128,10 +128,10 @@ export function InvoiceForm({ invoice, onClose }: { invoice: Invoice; onClose: (
                 placeholder="Opis usługi"
                 className="col-span-12 sm:col-span-4 bg-navy-950 border border-navy-600 rounded-lg px-2 py-1.5 text-sm text-ink-100 outline-none focus:border-gold"
               />
-              <input type="number" value={it.quantity} onChange={(e) => setItem(i, { quantity: Number(e.target.value) })} placeholder="Ilość" className="col-span-4 sm:col-span-1 bg-navy-950 border border-navy-600 rounded-lg px-2 py-1.5 text-sm text-ink-100 outline-none focus:border-gold" />
+              <input type="number" value={it.quantity} onChange={(e) => setItem(i, { quantity: Number(e.target.value) })} onFocus={(e) => e.target.select()} placeholder="Ilość" className="col-span-4 sm:col-span-1 bg-navy-950 border border-navy-600 rounded-lg px-2 py-1.5 text-sm text-ink-100 outline-none focus:border-gold" />
               <input value={it.unit} onChange={(e) => setItem(i, { unit: e.target.value })} placeholder="J.m." className="col-span-4 sm:col-span-1 bg-navy-950 border border-navy-600 rounded-lg px-2 py-1.5 text-sm text-ink-100 outline-none focus:border-gold" />
-              <input type="number" value={it.unitPriceNet} onChange={(e) => setItem(i, { unitPriceNet: Number(e.target.value) })} placeholder="Cena netto" className="col-span-4 sm:col-span-2 bg-navy-950 border border-navy-600 rounded-lg px-2 py-1.5 text-sm text-ink-100 outline-none focus:border-gold" />
-              <input type="number" value={it.vatRate} onChange={(e) => setItem(i, { vatRate: Number(e.target.value) })} placeholder="VAT %" className="col-span-6 sm:col-span-1 bg-navy-950 border border-navy-600 rounded-lg px-2 py-1.5 text-sm text-ink-100 outline-none focus:border-gold" />
+              <input type="number" value={it.unitPriceNet} onChange={(e) => setItem(i, { unitPriceNet: Number(e.target.value) })} onFocus={(e) => e.target.select()} placeholder="Cena netto" className="col-span-4 sm:col-span-2 bg-navy-950 border border-navy-600 rounded-lg px-2 py-1.5 text-sm text-ink-100 outline-none focus:border-gold" />
+              <input type="number" value={it.vatRate} onChange={(e) => setItem(i, { vatRate: Number(e.target.value) })} onFocus={(e) => e.target.select()} placeholder="VAT %" className="col-span-6 sm:col-span-1 bg-navy-950 border border-navy-600 rounded-lg px-2 py-1.5 text-sm text-ink-100 outline-none focus:border-gold" />
               <div className="col-span-6 sm:col-span-2 text-sm text-ink-300 text-right pr-1 flex items-center justify-end">
                 {(it.quantity * it.unitPriceNet * (1 + it.vatRate / 100)).toFixed(2)} PLN
               </div>

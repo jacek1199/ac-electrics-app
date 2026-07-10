@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, ReactNode } from 'react'
+import type { FocusEvent, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, ReactNode } from 'react'
 
 const baseControl =
   'w-full bg-navy-950 border border-navy-600 rounded-lg px-3 py-2 text-sm text-ink-100 placeholder:text-ink-500 outline-none transition-colors focus:border-gold'
@@ -17,10 +17,20 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   hint?: string
 }
-export function Input({ label, hint, className = '', ...rest }: InputProps) {
+export function Input({ label, hint, className = '', onFocus, type, ...rest }: InputProps) {
+  const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
+    if (type === 'number') {
+      try {
+        e.target.select()
+      } catch {
+        /* some engines restrict selection on number inputs — safe to ignore */
+      }
+    }
+    onFocus?.(e)
+  }
   return (
     <Wrap label={label} hint={hint}>
-      <input className={`${baseControl} ${className}`} {...rest} />
+      <input type={type} className={`${baseControl} ${className}`} onFocus={handleFocus} {...rest} />
     </Wrap>
   )
 }

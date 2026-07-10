@@ -156,6 +156,7 @@ export function Dashboard() {
                 type="number"
                 value={goal}
                 onChange={(e) => setGoal(Number(e.target.value))}
+                onFocus={(e) => e.target.select()}
                 className="w-full bg-navy-950 border border-navy-600 rounded-lg px-3 py-2 text-sm text-ink-100 outline-none focus:border-gold"
               />
               <span className="text-ink-500 text-sm">PLN</span>
