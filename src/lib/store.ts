@@ -161,7 +161,7 @@ const defaultCompanyInfo: CompanyInfo = {
   workingHours: 'Pon–Sob, szybki kontakt',
 }
 
-interface AppState {
+export interface AppState {
   orders: Order[]
   transactions: Transaction[]
   employees: Employee[]

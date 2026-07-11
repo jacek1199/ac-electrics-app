@@ -16,6 +16,7 @@ import { Warehouse } from './pages/Warehouse'
 import { CompanyInfoPage } from './pages/CompanyInfo'
 import { LockScreen } from './components/lock/LockScreen'
 import { subscribeLock } from './lib/lockBus'
+import { initSync } from './lib/sync'
 
 const UNLOCK_KEY = 'ac-electrics-unlocked'
 
@@ -30,6 +31,10 @@ function App() {
       }),
     [],
   )
+
+  useEffect(() => {
+    initSync()
+  }, [])
 
   if (!unlocked) {
     return (
