@@ -63,10 +63,7 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
   }
 
   return (
-    <header
-      className="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 sm:px-6 pb-4 border-b border-navy-800 bg-navy-950/80 backdrop-blur-xl"
-      style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
-    >
+    <header className="safe-area-top sticky top-0 z-20 flex items-center justify-between gap-3 px-4 sm:px-6 pb-4 border-b border-navy-800 bg-navy-950/80 backdrop-blur-xl">
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onMenu}

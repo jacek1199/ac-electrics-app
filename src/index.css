@@ -56,6 +56,17 @@ h1, h2, h3, h4, h5, .font-head {
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-teal-dim); }
 
+/* Only reserve room for the notch/status bar when actually installed as a
+   standalone PWA — in a regular browser tab Safari/Chrome already handle it,
+   so adding this unconditionally doubles up the gap. */
+.safe-area-top { padding-top: 1rem; }
+@media (display-mode: standalone) {
+  .safe-area-top { padding-top: max(1rem, env(safe-area-inset-top)); }
+}
+.safe-area-top-lg { padding-top: 1.25rem; }
+@media (display-mode: standalone) {
+  .safe-area-top-lg { padding-top: max(1.25rem, env(safe-area-inset-top)); }
+}
 
 @keyframes flicker {
   0%, 19%, 21%, 23%, 54%, 56%, 100% { opacity: var(--o, 0.8); }
