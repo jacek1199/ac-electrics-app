@@ -80,9 +80,11 @@ export interface TaskItem {
   deadline: string
   relatedOrderId?: string
   done: boolean
+  priority: Priority
   createdAt: string
   notifiedDayBefore: boolean
   notifiedDayOf: boolean
+  sortOrder: number
 }
 
 export type ContactType = 'klient' | 'partner' | 'wspolnik' | 'pracownik' | 'inne'
@@ -101,6 +103,7 @@ export interface Contact {
 }
 
 export type ShoppingCategory = 'sprzet' | 'auta' | 'materialy' | 'inne'
+export type Priority = 'wysoki' | 'sredni' | 'niski'
 
 export interface ShoppingItem {
   id: string
@@ -110,8 +113,11 @@ export interface ShoppingItem {
   quantity: number
   bought: boolean
   addedToExpenses: boolean
+  expenseTransactionId?: string
+  priority: Priority
   note: string
   date: string
+  sortOrder: number
 }
 
 export type WarehouseCategory = 'sprzet' | 'materialy' | 'auta' | 'nieruchomosci' | 'inne'
@@ -125,6 +131,7 @@ export interface WarehouseItem {
   place: string
   value: number
   note: string
+  sortOrder: number
 }
 
 export interface CompanyInfo {

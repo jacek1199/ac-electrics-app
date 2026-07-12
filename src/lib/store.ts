@@ -71,9 +71,11 @@ export const emptyTask = (): TaskItem => ({
   content: '',
   deadline: new Date().toISOString().slice(0, 10),
   done: false,
+  priority: 'sredni',
   createdAt: new Date().toISOString(),
   notifiedDayBefore: false,
   notifiedDayOf: false,
+  sortOrder: Date.now(),
 })
 
 export const emptyContact = (): Contact => ({
@@ -97,8 +99,10 @@ export const emptyShoppingItem = (): ShoppingItem => ({
   quantity: 1,
   bought: false,
   addedToExpenses: false,
+  priority: 'sredni',
   note: '',
   date: new Date().toISOString().slice(0, 10),
+  sortOrder: Date.now(),
 })
 
 export const emptyWarehouseItem = (): WarehouseItem => ({
@@ -110,6 +114,7 @@ export const emptyWarehouseItem = (): WarehouseItem => ({
   place: '',
   value: 0,
   note: '',
+  sortOrder: Date.now(),
 })
 
 export const emptyInvoice = (): Invoice => ({
@@ -161,6 +166,22 @@ const defaultCompanyInfo: CompanyInfo = {
   workingHours: 'Pon–Sob, szybki kontakt',
 }
 
+// Older saved/synced data predates the priority & manual sort-order fields —
+// backfill sane defaults so it doesn't render as "undefined" on any device.
+export function backfillDefaults(data: Partial<AppState>): Partial<AppState> {
+  const out = { ...data }
+  if (out.tasks) {
+    out.tasks = out.tasks.map((t, idx) => ({ priority: 'sredni' as const, sortOrder: idx, ...(t as Partial<TaskItem>) }) as TaskItem)
+  }
+  if (out.shopping) {
+    out.shopping = out.shopping.map((i, idx) => ({ priority: 'sredni' as const, sortOrder: idx, ...(i as Partial<ShoppingItem>) }) as ShoppingItem)
+  }
+  if (out.warehouse) {
+    out.warehouse = out.warehouse.map((i, idx) => ({ sortOrder: idx, ...(i as Partial<WarehouseItem>) }) as WarehouseItem)
+  }
+  return out
+}
+
 export interface AppState {
   orders: Order[]
   transactions: Transaction[]
@@ -192,6 +213,7 @@ export interface AppState {
   addTask: (t: TaskItem) => void
   updateTask: (t: TaskItem) => void
   removeTask: (id: string) => void
+  reorderTasks: (tasks: TaskItem[]) => void
 
   addContact: (c: Contact) => void
   updateContact: (c: Contact) => void
@@ -200,10 +222,12 @@ export interface AppState {
   addShoppingItem: (s: ShoppingItem) => void
   updateShoppingItem: (s: ShoppingItem) => void
   removeShoppingItem: (id: string) => void
+  reorderShopping: (items: ShoppingItem[]) => void
 
   addWarehouseItem: (w: WarehouseItem) => void
   updateWarehouseItem: (w: WarehouseItem) => void
   removeWarehouseItem: (id: string) => void
+  reorderWarehouse: (items: WarehouseItem[]) => void
 
   updateCompany: (c: CompanyInfo) => void
 
@@ -256,6 +280,7 @@ export const useStore = create<AppState>()(
       addTask: (t) => set((s) => ({ tasks: [t, ...s.tasks] })),
       updateTask: (t) => set((s) => ({ tasks: s.tasks.map((x) => (x.id === t.id ? t : x)) })),
       removeTask: (id) => set((s) => ({ tasks: s.tasks.filter((x) => x.id !== id) })),
+      reorderTasks: (tasks) => set({ tasks }),
 
       addContact: (c) => set((s) => ({ contacts: [c, ...s.contacts] })),
       updateContact: (c) =>
@@ -267,12 +292,14 @@ export const useStore = create<AppState>()(
         set((s) => ({ shopping: s.shopping.map((x) => (x.id === i.id ? i : x)) })),
       removeShoppingItem: (id) =>
         set((s) => ({ shopping: s.shopping.filter((x) => x.id !== id) })),
+      reorderShopping: (shopping) => set({ shopping }),
 
       addWarehouseItem: (i) => set((s) => ({ warehouse: [i, ...s.warehouse] })),
       updateWarehouseItem: (i) =>
         set((s) => ({ warehouse: s.warehouse.map((x) => (x.id === i.id ? i : x)) })),
       removeWarehouseItem: (id) =>
         set((s) => ({ warehouse: s.warehouse.filter((x) => x.id !== id) })),
+      reorderWarehouse: (warehouse) => set({ warehouse }),
 
       updateCompany: (c) => set({ company: c }),
 
@@ -300,6 +327,9 @@ export const useStore = create<AppState>()(
 
       importAll: (data) => set(() => ({ ...data }) as AppState),
     }),
-    { name: 'ac-electrics-data' },
+    {
+      name: 'ac-electrics-data',
+      merge: (persisted, current) => ({ ...current, ...backfillDefaults((persisted ?? {}) as Partial<AppState>) }),
+    },
   ),
 )

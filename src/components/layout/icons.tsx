@@ -88,3 +88,13 @@ export const IconLock = (p: SVGProps<SVGSVGElement>) => (
 export const IconBackspace = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M9 4h11a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H9l-7-8Z" /><path d="m12 9.5 5 5M17 9.5l-5 5" /></svg>
 )
+export const IconGripVertical = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)} strokeWidth={0} fill="currentColor">
+    <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
+    <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+    <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
+  </svg>
+)
+export const IconSort = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M3 7h11M3 12h7M3 17h4" /><path d="M17 4v16M17 20l-3-3M17 20l3-3" /></svg>
+)

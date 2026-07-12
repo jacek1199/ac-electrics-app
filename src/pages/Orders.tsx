@@ -7,9 +7,19 @@ import { Card } from '../components/ui/Card'
 import { Modal } from '../components/ui/Modal'
 import { StatusBadge, SourceBadge } from '../components/ui/Badge'
 import { EmptyState } from '../components/ui/EmptyState'
+import { SortSelect } from '../components/ui/SortSelect'
 import { OrderForm } from '../components/orders/OrderForm'
 import { computeOrderProfit, fmtPLN, fmtDate } from '../lib/calc'
 import { IconBolt, IconPlus, IconMapPin, IconUsers } from '../components/layout/icons'
+
+type SortMode = 'najnowsze' | 'az' | 'cena_rosnaco' | 'cena_malejaco'
+
+const sortOptions = [
+  { value: 'najnowsze', label: 'Najnowsze' },
+  { value: 'az', label: 'Nazwa A-Z' },
+  { value: 'cena_rosnaco', label: 'Cena rosnąco' },
+  { value: 'cena_malejaco', label: 'Cena malejąco' },
+]
 
 export function Orders() {
   const orders = useStore((s) => s.orders)
@@ -18,6 +28,7 @@ export function Orders() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'wszystkie'>('wszystkie')
   const [sourceFilter, setSourceFilter] = useState<IncomeSource | 'wszystkie'>('wszystkie')
   const [search, setSearch] = useState('')
+  const [sortMode, setSortMode] = useState<SortMode>('najnowsze')
 
   const filtered = useMemo(() => {
     return orders
@@ -28,8 +39,19 @@ export function Orders() {
         if (!q) return true
         return o.title.toLowerCase().includes(q) || o.client.name.toLowerCase().includes(q)
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  }, [orders, statusFilter, sourceFilter, search])
+      .sort((a, b) => {
+        switch (sortMode) {
+          case 'az':
+            return a.title.localeCompare(b.title, 'pl')
+          case 'cena_rosnaco':
+            return a.price - b.price
+          case 'cena_malejaco':
+            return b.price - a.price
+          default:
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        }
+      })
+  }, [orders, statusFilter, sourceFilter, search, sortMode])
 
   return (
     <div className="space-y-6">
@@ -71,6 +93,7 @@ export function Orders() {
           <option value="odwrocone">Odwrócone zlecenie</option>
           <option value="inne">Inne</option>
         </select>
+        <SortSelect value={sortMode} onChange={(v) => setSortMode(v as SortMode)} options={sortOptions} />
       </Card>
 
       {filtered.length === 0 ? (

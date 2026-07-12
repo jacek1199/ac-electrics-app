@@ -1,4 +1,4 @@
-import type { OrderStatus, IncomeSource, InvoiceStatus } from '../../lib/types'
+import type { OrderStatus, IncomeSource, InvoiceStatus, Priority } from '../../lib/types'
 
 const statusStyles: Record<OrderStatus, string> = {
   nowe: 'bg-teal/15 text-teal-bright border-teal/30',
@@ -55,6 +55,27 @@ export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
   return (
     <span className={`inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full border ${invoiceStyles[status]}`}>
       {invoiceLabels[status]}
+    </span>
+  )
+}
+
+export const priorityLabels: Record<Priority, string> = {
+  wysoki: 'Wysoki',
+  sredni: 'Średni',
+  niski: 'Niski',
+}
+const priorityStyles: Record<Priority, string> = {
+  wysoki: 'bg-danger/15 text-danger border-danger/30',
+  sredni: 'bg-gold/15 text-gold-bright border-gold/30',
+  niski: 'bg-ink-500/15 text-ink-300 border-ink-500/30',
+}
+export const priorityOrder: Record<Priority, number> = { wysoki: 0, sredni: 1, niski: 2 }
+
+export function PriorityBadge({ priority }: { priority: Priority }) {
+  return (
+    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${priorityStyles[priority]}`}>
+      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+      {priorityLabels[priority]}
     </span>
   )
 }

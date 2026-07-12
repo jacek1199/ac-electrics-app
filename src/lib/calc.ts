@@ -19,9 +19,11 @@ export function computeOrderProfit(o: Order): OrderProfit {
   const fuel = o.costs.fuel || 0
   const tax = (price * (o.costs.taxPercent || 0)) / 100
   const other = o.costs.other || 0
-  const jacekCut = (price * (o.jacekPercent || 0)) / 100
   const totalCosts = materials + labor + fuel + tax + other
-  const netProfit = price - totalCosts - jacekCut
+  const profitBeforeShare = price - totalCosts
+  // Jacek's cut comes out of the order's profit, not its full revenue.
+  const jacekCut = (profitBeforeShare * (o.jacekPercent || 0)) / 100
+  const netProfit = profitBeforeShare - jacekCut
   return { price, materials, labor, fuel, tax, other, totalCosts, jacekCut, netProfit }
 }
 
@@ -69,6 +71,9 @@ export function summarizePeriod(
   let orderCount = 0
 
   for (const o of orders) {
+    // Only completed orders count towards income/profit — a quote or an
+    // in-progress job isn't confirmed revenue yet.
+    if (o.status !== 'zakonczone') continue
     const relevantDate = o.completedAt || o.deadline || o.createdAt
     if (!predicate(relevantDate)) continue
     const p = computeOrderProfit(o)

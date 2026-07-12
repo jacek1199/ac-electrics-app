@@ -49,11 +49,15 @@ export function ShoppingForm({ item, onClose }: { item: ShoppingItem; onClose: (
         <Input type="number" label="Ilość" value={draft.quantity} onChange={(e) => set('quantity', Number(e.target.value))} />
         <Input type="date" label="Data" value={draft.date} onChange={(e) => set('date', e.target.value)} />
       </div>
+      <Select label="Priorytet" value={draft.priority} onChange={(e) => set('priority', e.target.value as ShoppingItem['priority'])}>
+        <option value="wysoki">Wysoki</option>
+        <option value="sredni">Średni</option>
+        <option value="niski">Niski</option>
+      </Select>
       <Input label="Notatka" value={draft.note} onChange={(e) => set('note', e.target.value)} />
-      <label className="flex items-center gap-2 text-sm text-ink-300">
-        <input type="checkbox" checked={draft.bought} onChange={(e) => set('bought', e.target.checked)} className="accent-gold w-4 h-4" />
-        Kupione
-      </label>
+      <p className="text-xs text-ink-500">
+        Status "kupione" zaznaczasz na liście zakupów (odhaczenie automatycznie dodaje wydatek).
+      </p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">
         {!isNew ? (

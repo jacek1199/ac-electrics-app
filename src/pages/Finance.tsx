@@ -36,7 +36,7 @@ export function Finance() {
   const incomeTx = transactions.filter((t) => t.type === 'income' && predicate(t.date)).sort((a, b) => b.date.localeCompare(a.date))
   const expenseTx = transactions.filter((t) => t.type === 'expense' && predicate(t.date)).sort((a, b) => b.date.localeCompare(a.date))
 
-  const orderIncome = orders.filter((o) => predicate(o.completedAt || o.deadline || o.createdAt))
+  const orderIncome = orders.filter((o) => o.status === 'zakonczone' && predicate(o.completedAt || o.deadline || o.createdAt))
 
   const del = async (id: string) => {
     const ok = await confirmAction('Usunąć tę pozycję?', 'Usuń wpis')
@@ -83,7 +83,7 @@ export function Finance() {
         <Card className="p-5">
           <CardHeader
             title="Przychody"
-            subtitle="Ze zleceń (automatycznie) + wpisy ręczne"
+            subtitle="Z zakończonych zleceń (automatycznie) + wpisy ręczne"
             action={
               <Button size="sm" variant="primary" icon={<IconPlus className="w-4 h-4" />} onClick={() => setEditing(emptyTransaction('income'))}>
                 Dodaj

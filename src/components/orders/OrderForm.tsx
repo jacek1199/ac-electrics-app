@@ -12,6 +12,7 @@ import { pushToast } from '../ui/toastBus'
 
 export function OrderForm({ order, onClose }: { order: Order; onClose: () => void }) {
   const [draft, setDraft] = useState<Order>(order)
+  const wasAlreadyCompleted = order.status === 'zakonczone'
   const employees = useStore((s) => s.employees)
   const addOrder = useStore((s) => s.addOrder)
   const updateOrder = useStore((s) => s.updateOrder)
@@ -161,7 +162,7 @@ export function OrderForm({ order, onClose }: { order: Order; onClose: () => voi
           <Input type="number" label="Paliwo / dojazd (PLN)" value={draft.costs.fuel} onChange={(e) => setCosts('fuel', Number(e.target.value))} />
           <Input type="number" label="Podatek (%)" value={draft.costs.taxPercent} onChange={(e) => setCosts('taxPercent', Number(e.target.value))} />
           <Input type="number" label="Inne koszty (PLN)" value={draft.costs.other} onChange={(e) => setCosts('other', Number(e.target.value))} />
-          <Input type="number" label="Twój udział — Jacek (%)" value={draft.jacekPercent} onChange={(e) => set('jacekPercent', Number(e.target.value))} />
+          <Input type="number" label="Twój udział — Jacek (% zysku)" value={draft.jacekPercent} onChange={(e) => set('jacekPercent', Number(e.target.value))} hint="Liczone od zysku zlecenia, nie od kwoty zlecenia" />
         </div>
 
         <div className="rounded-xl border border-navy-600 bg-navy-950/60 p-4 space-y-1.5 text-sm">
@@ -171,11 +172,26 @@ export function OrderForm({ order, onClose }: { order: Order; onClose: () => voi
           <Row label="Paliwo / dojazd" value={`− ${fmtPLN(profit.fuel)}`} muted />
           <Row label={`Podatek (${draft.costs.taxPercent}%)`} value={`− ${fmtPLN(profit.tax)}`} muted />
           <Row label="Inne koszty" value={`− ${fmtPLN(profit.other)}`} muted />
-          <Row label={`Twój udział — Jacek (${draft.jacekPercent}%)`} value={`− ${fmtPLN(profit.jacekCut)}`} gold />
+          <div className="border-t border-navy-700 my-2" />
+          <Row label="Zysk zlecenia (przed podziałem)" value={fmtPLN(profit.price - profit.totalCosts)} />
+          <Row label={`Twój udział — Jacek (${draft.jacekPercent}% zysku)`} value={`− ${fmtPLN(profit.jacekCut)}`} gold />
           <div className="border-t border-navy-700 my-2" />
           <Row label="Zysk netto (firma)" value={fmtPLN(profit.netProfit)} strong />
         </div>
       </section>
+
+      {draft.status === 'zakonczone' && !wasAlreadyCompleted && (
+        <section className="rounded-xl border-2 border-gold/40 bg-gold/5 p-4">
+          <h4 className="font-head text-sm font-bold text-gold-bright mb-2">Potwierdzenie zakończenia zlecenia</h4>
+          <p className="text-xs text-ink-300 mb-3">
+            Sprawdź jeszcze raz kwotę i koszty powyżej — po zatwierdzeniu to zlecenie zostanie policzone w przychodach i zysku firmy.
+          </p>
+          <div className="flex items-center justify-between text-sm bg-navy-950/60 rounded-lg px-3 py-2">
+            <span className="text-ink-300">Zysk netto do zaksięgowania</span>
+            <span className={`font-head font-bold ${profit.netProfit >= 0 ? 'text-success' : 'text-danger'}`}>{fmtPLN(profit.netProfit)}</span>
+          </div>
+        </section>
+      )}
 
       <Textarea label="Notatki" value={draft.notes} onChange={(e) => set('notes', e.target.value)} />
 
@@ -187,7 +203,9 @@ export function OrderForm({ order, onClose }: { order: Order; onClose: () => voi
         ) : <span />}
         <div className="flex gap-2">
           <Button variant="subtle" size="md" onClick={onClose}>Anuluj</Button>
-          <Button variant="primary" size="md" onClick={save}>Zapisz zlecenie</Button>
+          <Button variant="primary" size="md" onClick={save}>
+            {draft.status === 'zakonczone' && !wasAlreadyCompleted ? 'Zatwierdź zakończenie i zapisz' : 'Zapisz zlecenie'}
+          </Button>
         </div>
       </div>
     </div>

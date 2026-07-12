@@ -47,13 +47,18 @@ export function TaskForm({ task, onClose }: { task: TaskItem; onClose: () => voi
       <Textarea label="Treść" value={draft.content} onChange={(e) => set('content', e.target.value)} />
       <div className="grid grid-cols-2 gap-4">
         <Input type="date" label="Termin" value={draft.deadline} onChange={(e) => set('deadline', e.target.value)} />
-        <Select label="Powiąż ze zleceniem (opcjonalnie)" value={draft.relatedOrderId ?? ''} onChange={(e) => set('relatedOrderId', e.target.value || undefined)}>
-          <option value="">Brak</option>
-          {orders.map((o) => (
-            <option key={o.id} value={o.id}>{o.title || 'Bez tytułu'}</option>
-          ))}
+        <Select label="Priorytet" value={draft.priority} onChange={(e) => set('priority', e.target.value as TaskItem['priority'])}>
+          <option value="wysoki">Wysoki</option>
+          <option value="sredni">Średni</option>
+          <option value="niski">Niski</option>
         </Select>
       </div>
+      <Select label="Powiąż ze zleceniem (opcjonalnie)" value={draft.relatedOrderId ?? ''} onChange={(e) => set('relatedOrderId', e.target.value || undefined)}>
+        <option value="">Brak</option>
+        {orders.map((o) => (
+          <option key={o.id} value={o.id}>{o.title || 'Bez tytułu'}</option>
+        ))}
+      </Select>
       <label className="flex items-center gap-2 text-sm text-ink-300">
         <input type="checkbox" checked={draft.done} onChange={(e) => set('done', e.target.checked)} className="accent-gold w-4 h-4" />
         Zadanie ukończone

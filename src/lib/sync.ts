@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient'
-import { useStore, type AppState } from './store'
+import { useStore, backfillDefaults, type AppState } from './store'
 
 const SYNC_KEYS = [
   'orders',
@@ -57,7 +57,7 @@ export async function initSync(): Promise<void> {
     const { data, error } = await supabase.from('app_state').select('data').eq('id', 1).single()
     if (!error && !isEmptySnapshot(data?.data as Partial<SyncedState>)) {
       applyingRemote = true
-      useStore.setState(data!.data as Partial<AppState>)
+      useStore.setState(backfillDefaults(data!.data as Partial<AppState>))
       applyingRemote = false
     } else {
       await pushToRemote()
@@ -73,7 +73,7 @@ export async function initSync(): Promise<void> {
       { event: 'UPDATE', schema: 'public', table: 'app_state', filter: 'id=eq.1' },
       (payload) => {
         applyingRemote = true
-        useStore.setState(payload.new.data as Partial<AppState>)
+        useStore.setState(backfillDefaults(payload.new.data as Partial<AppState>))
         applyingRemote = false
       },
     )

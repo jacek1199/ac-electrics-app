@@ -6,6 +6,7 @@ import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
 import { EmptyState } from '../components/ui/EmptyState'
+import { SortSelect } from '../components/ui/SortSelect'
 import { ContactForm } from '../components/contacts/ContactForm'
 import { IconPlus, IconContacts, IconPhone } from '../components/layout/icons'
 
@@ -13,18 +14,30 @@ const typeLabels: Record<ContactType, string> = {
   klient: 'Klient', partner: 'Partner', wspolnik: 'Wspólnik', pracownik: 'Pracownik', inne: 'Inne',
 }
 
+type SortMode = 'dodania' | 'az'
+
+const sortOptions = [
+  { value: 'dodania', label: 'Kolejność dodania' },
+  { value: 'az', label: 'Nazwa A-Z' },
+]
+
 export function Contacts() {
   const contacts = useStore((s) => s.contacts)
   const employees = useStore((s) => s.employees)
   const [tab, setTab] = useState<'kontakty' | 'ksiazka'>('kontakty')
   const [editing, setEditing] = useState<Contact | null>(null)
   const [search, setSearch] = useState('')
+  const [sortMode, setSortMode] = useState<SortMode>('dodania')
 
-  const filteredContacts = contacts.filter((c) => {
-    const q = search.trim().toLowerCase()
-    if (!q) return true
-    return `${c.firstName} ${c.lastName} ${c.companyName} ${c.phone}`.toLowerCase().includes(q)
-  })
+  const contactName = (c: Contact) => `${c.firstName} ${c.lastName}`.trim() || c.companyName
+
+  const filteredContacts = contacts
+    .filter((c) => {
+      const q = search.trim().toLowerCase()
+      if (!q) return true
+      return `${c.firstName} ${c.lastName} ${c.companyName} ${c.phone}`.toLowerCase().includes(q)
+    })
+    .sort((a, b) => (sortMode === 'az' ? contactName(a).localeCompare(contactName(b), 'pl') : 0))
 
   const phoneBook = useMemo(() => {
     const fromContacts = contacts
@@ -65,6 +78,9 @@ export function Contacts() {
           placeholder="Szukaj po imieniu, nazwisku, telefonie…"
           className="flex-1 min-w-[200px] bg-navy-950 border border-navy-600 rounded-lg px-3 py-2 text-sm text-ink-100 placeholder:text-ink-500 outline-none focus:border-gold"
         />
+        {tab === 'kontakty' && (
+          <SortSelect value={sortMode} onChange={(v) => setSortMode(v as SortMode)} options={sortOptions} />
+        )}
       </div>
 
       {tab === 'kontakty' ? (
