@@ -12,7 +12,7 @@ export function RateSuggestion({
   onApply?: (mid: number, rate: ServiceRate) => void
   applyLabel?: string
 }) {
-  const matches = matchServiceRates(text).slice(0, 2)
+  const matches = matchServiceRates(text).slice(0, 3)
   if (matches.length === 0) return null
 
   return (
