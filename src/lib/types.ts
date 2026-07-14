@@ -39,6 +39,8 @@ export interface Order {
   price: number
   costs: OrderCosts
   jacekPercent: number
+  couponId?: string
+  discountPercent: number
   notes: string
   notifiedDayBefore: boolean
   notifiedDayOf: boolean
@@ -78,10 +80,13 @@ export interface TaskItem {
   title: string
   content: string
   deadline: string
+  time: string
   relatedOrderId?: string
   done: boolean
   priority: Priority
   createdAt: string
+  notifiedHourBefore: boolean
+  notifiedAtTime: boolean
   notifiedDayBefore: boolean
   notifiedDayOf: boolean
   sortOrder: number
@@ -118,6 +123,7 @@ export interface ShoppingItem {
   note: string
   date: string
   sortOrder: number
+  relatedOrderId?: string
 }
 
 export type WarehouseCategory = 'sprzet' | 'materialy' | 'auta' | 'nieruchomosci' | 'inne'
@@ -132,6 +138,29 @@ export interface WarehouseItem {
   value: number
   note: string
   sortOrder: number
+  priority: Priority
+}
+
+export type CouponType = 'znizka_kolejna_usluga' | 'zwrot_polecenie'
+
+export interface Coupon {
+  id: string
+  name: string
+  type: CouponType
+  code: string
+  percent: number
+  active: boolean
+  note: string
+  createdAt: string
+}
+
+export interface Note {
+  id: string
+  title: string
+  content: string
+  createdAt: string
+  updatedAt: string
+  pinned: boolean
 }
 
 export interface CompanyInfo {

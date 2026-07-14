@@ -1,6 +1,8 @@
 import type { Order, Transaction, Employee, IncomeSource } from './types'
 
 export interface OrderProfit {
+  grossPrice: number
+  discount: number
   price: number
   materials: number
   labor: number
@@ -13,7 +15,9 @@ export interface OrderProfit {
 }
 
 export function computeOrderProfit(o: Order): OrderProfit {
-  const price = o.price || 0
+  const grossPrice = o.price || 0
+  const discount = (grossPrice * (o.discountPercent || 0)) / 100
+  const price = grossPrice - discount
   const materials = o.costs.materials || 0
   const labor = o.costs.labor || 0
   const fuel = o.costs.fuel || 0
@@ -24,7 +28,7 @@ export function computeOrderProfit(o: Order): OrderProfit {
   // Jacek's cut comes out of the order's profit, not its full revenue.
   const jacekCut = (profitBeforeShare * (o.jacekPercent || 0)) / 100
   const netProfit = profitBeforeShare - jacekCut
-  return { price, materials, labor, fuel, tax, other, totalCosts, jacekCut, netProfit }
+  return { grossPrice, discount, price, materials, labor, fuel, tax, other, totalCosts, jacekCut, netProfit }
 }
 
 export function monthKey(d: string | Date): string {

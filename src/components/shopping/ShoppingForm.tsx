@@ -44,7 +44,7 @@ export function ShoppingForm({ item, onClose }: { item: ShoppingItem; onClose: (
         <option value="materialy">Materiały</option>
         <option value="inne">Inne</option>
       </Select>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Input type="number" label="Cena (PLN)" value={draft.price} onChange={(e) => set('price', Number(e.target.value))} />
         <Input type="number" label="Ilość" value={draft.quantity} onChange={(e) => set('quantity', Number(e.target.value))} />
         <Input type="date" label="Data" value={draft.date} onChange={(e) => set('date', e.target.value)} />

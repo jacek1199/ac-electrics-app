@@ -13,9 +13,10 @@ import { TaskForm } from '../components/tasks/TaskForm'
 import { fmtDate } from '../lib/calc'
 import { IconPlus, IconChecklist } from '../components/layout/icons'
 
-type SortMode = 'custom' | 'priorytet' | 'termin' | 'az'
+type SortMode = 'inteligentne' | 'custom' | 'priorytet' | 'termin' | 'az'
 
 const sortOptions = [
+  { value: 'inteligentne', label: 'Automatycznie (termin, priorytet)' },
   { value: 'custom', label: 'Kolejność własna' },
   { value: 'priorytet', label: 'Priorytet' },
   { value: 'termin', label: 'Termin' },
@@ -34,8 +35,10 @@ function sortTasks(tasks: TaskItem[], mode: SortMode): TaskItem[] {
         return a.deadline.localeCompare(b.deadline)
       case 'az':
         return a.title.localeCompare(b.title, 'pl')
-      default:
+      case 'custom':
         return a.sortOrder - b.sortOrder
+      default:
+        return a.deadline.localeCompare(b.deadline) || priorityOrder[a.priority] - priorityOrder[b.priority]
     }
   })
   return arr
@@ -79,7 +82,7 @@ function Column({ assignee, label, tasks, sortMode, onEdit, onToggle, onReorder 
                       <PriorityBadge priority={t.priority} />
                     </div>
                     {t.content && <div className="text-xs text-ink-500 truncate mt-0.5">{t.content}</div>}
-                    <div className={`text-[11px] mt-1 ${overdue ? 'text-danger font-semibold' : 'text-ink-500'}`}>Termin: {fmtDate(t.deadline)}{overdue && ' — zaległe'}</div>
+                    <div className={`text-[11px] mt-1 ${overdue ? 'text-danger font-semibold' : 'text-ink-500'}`}>Termin: {fmtDate(t.deadline)}{t.time && ` ${t.time}`}{overdue && ' — zaległe'}</div>
                   </div>
                 </div>
               )
@@ -96,7 +99,7 @@ export function Tasks() {
   const updateTask = useStore((s) => s.updateTask)
   const reorderTasks = useStore((s) => s.reorderTasks)
   const [editing, setEditing] = useState<TaskItem | null>(null)
-  const [sortMode, setSortMode] = useState<SortMode>('custom')
+  const [sortMode, setSortMode] = useState<SortMode>('inteligentne')
 
   const handleReorder = (assignee: TaskAssignee) => (newOrder: TaskItem[]) => {
     const updated = newOrder.map((t, idx) => ({ ...t, sortOrder: idx }))

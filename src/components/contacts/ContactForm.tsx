@@ -44,12 +44,12 @@ export function ContactForm({ contact, onClose }: { contact: Contact; onClose: (
         <option value="pracownik">Pracownik</option>
         <option value="inne">Inne</option>
       </Select>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="Imię" value={draft.firstName} onChange={(e) => set('firstName', e.target.value)} autoFocus />
         <Input label="Nazwisko" value={draft.lastName} onChange={(e) => set('lastName', e.target.value)} />
       </div>
       <Input label="Firma (opcjonalnie)" value={draft.companyName} onChange={(e) => set('companyName', e.target.value)} />
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="Telefon" value={draft.phone} onChange={(e) => set('phone', e.target.value)} />
         <Input label="E-mail" value={draft.email} onChange={(e) => set('email', e.target.value)} />
       </div>

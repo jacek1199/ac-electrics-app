@@ -9,6 +9,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { SortSelect } from '../components/ui/SortSelect'
 import { DragList } from '../components/ui/DragList'
 import { WarehouseForm } from '../components/warehouse/WarehouseForm'
+import { PriorityBadge, priorityOrder } from '../components/ui/Badge'
 import { fmtPLN } from '../lib/calc'
 import { IconPlus, IconWarehouse } from '../components/layout/icons'
 
@@ -16,10 +17,12 @@ const categoryLabels: Record<WarehouseCategory, string> = {
   sprzet: 'Sprzęt', materialy: 'Materiały', auta: 'Auta', nieruchomosci: 'Nieruchomości / miejsca', inne: 'Inne',
 }
 
-type SortMode = 'custom' | 'az' | 'wartosc_rosnaco' | 'wartosc_malejaco'
+type SortMode = 'inteligentne' | 'custom' | 'priorytet' | 'az' | 'wartosc_rosnaco' | 'wartosc_malejaco'
 
 const sortOptions = [
+  { value: 'inteligentne', label: 'Automatycznie (priorytet, cena)' },
   { value: 'custom', label: 'Kolejność własna' },
+  { value: 'priorytet', label: 'Priorytet' },
   { value: 'az', label: 'Nazwa A-Z' },
   { value: 'wartosc_rosnaco', label: 'Wartość rosnąco' },
   { value: 'wartosc_malejaco', label: 'Wartość malejąco' },
@@ -29,14 +32,18 @@ function sortItems(items: WarehouseItem[], mode: SortMode): WarehouseItem[] {
   const arr = [...items]
   arr.sort((a, b) => {
     switch (mode) {
+      case 'priorytet':
+        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.name.localeCompare(b.name, 'pl')
       case 'az':
         return a.name.localeCompare(b.name, 'pl')
       case 'wartosc_rosnaco':
         return a.value - b.value
       case 'wartosc_malejaco':
         return b.value - a.value
-      default:
+      case 'custom':
         return a.sortOrder - b.sortOrder
+      default:
+        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.value - b.value
     }
   })
   return arr
@@ -47,7 +54,7 @@ export function Warehouse() {
   const reorderWarehouse = useStore((s) => s.reorderWarehouse)
   const [editing, setEditing] = useState<WarehouseItem | null>(null)
   const [category, setCategory] = useState<WarehouseCategory | 'wszystkie'>('wszystkie')
-  const [sortMode, setSortMode] = useState<SortMode>('custom')
+  const [sortMode, setSortMode] = useState<SortMode>('inteligentne')
 
   const filtered = useMemo(() => items.filter((i) => category === 'wszystkie' || i.category === category), [items, category])
   const sorted = sortItems(filtered, sortMode)
@@ -102,7 +109,10 @@ export function Warehouse() {
                   <h3 className="font-head font-semibold text-ink-100">{i.name}</h3>
                   <span className="text-[10px] px-2 py-1 rounded-full bg-teal/15 text-teal-bright border border-teal/30 shrink-0">{categoryLabels[i.category]}</span>
                 </div>
-                <div className="text-xs text-ink-500 mb-3">{i.place || 'Brak lokalizacji'}</div>
+                <div className="flex items-center gap-2 mb-3">
+                  <PriorityBadge priority={i.priority} />
+                  <span className="text-xs text-ink-500">{i.place || 'Brak lokalizacji'}</span>
+                </div>
                 <div className="flex items-center justify-between pt-3 border-t border-navy-700">
                   <span className="text-sm text-ink-300">{i.quantity} {i.unit}</span>
                   <span className="font-head font-bold text-gold-bright text-sm">{fmtPLN(i.value)}</span>

@@ -56,7 +56,7 @@ export function TransactionForm({ tx, onClose }: { tx: Transaction; onClose: () 
           <option value="jednorazowe">Jednorazowy</option>
         </Select>
       )}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input type="number" label="Kwota (PLN)" value={draft.amount} onChange={(e) => set('amount', Number(e.target.value))} />
         <Input type="date" label="Data" value={draft.date} onChange={(e) => set('date', e.target.value)} />
       </div>

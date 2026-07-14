@@ -22,7 +22,7 @@ export function TaskForm({ task, onClose }: { task: TaskItem; onClose: () => voi
       pushToast('Podaj tytuł zadania', 'danger')
       return
     }
-    const patch = { ...draft, notifiedDayBefore: false, notifiedDayOf: false }
+    const patch = { ...draft, notifiedDayBefore: false, notifiedDayOf: false, notifiedHourBefore: false, notifiedAtTime: false }
     if (isNew) addTask(patch)
     else updateTask(patch)
     pushToast(isNew ? 'Zadanie dodane' : 'Zadanie zaktualizowane')
@@ -45,8 +45,9 @@ export function TaskForm({ task, onClose }: { task: TaskItem; onClose: () => voi
       </Select>
       <Input label="Tytuł zadania" value={draft.title} onChange={(e) => set('title', e.target.value)} autoFocus />
       <Textarea label="Treść" value={draft.content} onChange={(e) => set('content', e.target.value)} />
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Input type="date" label="Termin" value={draft.deadline} onChange={(e) => set('deadline', e.target.value)} />
+        <Input type="time" label="Godzina (opcjonalnie)" value={draft.time} onChange={(e) => set('time', e.target.value)} hint={draft.time ? 'Powiadomienie godzinę przed i o tej godzinie' : undefined} />
         <Select label="Priorytet" value={draft.priority} onChange={(e) => set('priority', e.target.value as TaskItem['priority'])}>
           <option value="wysoki">Wysoki</option>
           <option value="sredni">Średni</option>

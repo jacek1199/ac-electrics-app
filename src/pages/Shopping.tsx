@@ -19,9 +19,10 @@ const categoryLabels: Record<ShoppingCategory, string> = {
   sprzet: 'Sprzęt', auta: 'Auta', materialy: 'Materiały', inne: 'Inne',
 }
 
-type SortMode = 'custom' | 'priorytet' | 'az' | 'najnowsze' | 'cena_rosnaco' | 'cena_malejaco'
+type SortMode = 'inteligentne' | 'custom' | 'priorytet' | 'az' | 'najnowsze' | 'cena_rosnaco' | 'cena_malejaco'
 
 const sortOptions = [
+  { value: 'inteligentne', label: 'Automatycznie (termin, priorytet, cena)' },
   { value: 'custom', label: 'Kolejność własna' },
   { value: 'priorytet', label: 'Priorytet' },
   { value: 'az', label: 'Nazwa A-Z' },
@@ -44,8 +45,10 @@ function sortItems(items: ShoppingItem[], mode: SortMode): ShoppingItem[] {
         return a.price * a.quantity - b.price * b.quantity
       case 'cena_malejaco':
         return b.price * b.quantity - a.price * a.quantity
-      default:
+      case 'custom':
         return a.sortOrder - b.sortOrder
+      default:
+        return a.date.localeCompare(b.date) || priorityOrder[a.priority] - priorityOrder[b.priority] || a.price * a.quantity - b.price * b.quantity
     }
   })
   return arr
@@ -59,7 +62,7 @@ export function Shopping() {
   const reorderShopping = useStore((s) => s.reorderShopping)
   const [editing, setEditing] = useState<ShoppingItem | null>(null)
   const [category, setCategory] = useState<ShoppingCategory | 'wszystkie'>('wszystkie')
-  const [sortMode, setSortMode] = useState<SortMode>('custom')
+  const [sortMode, setSortMode] = useState<SortMode>('inteligentne')
 
   const filtered = useMemo(
     () => items.filter((i) => category === 'wszystkie' || i.category === category),

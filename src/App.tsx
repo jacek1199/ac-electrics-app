@@ -14,6 +14,8 @@ import { Contacts } from './pages/Contacts'
 import { Shopping } from './pages/Shopping'
 import { Warehouse } from './pages/Warehouse'
 import { CompanyInfoPage } from './pages/CompanyInfo'
+import { Notes } from './pages/Notes'
+import { Coupons } from './pages/Coupons'
 import { LockScreen } from './components/lock/LockScreen'
 import { subscribeLock } from './lib/lockBus'
 import { initSync } from './lib/sync'
@@ -63,6 +65,8 @@ function App() {
           <Route path="/kontakty" element={<Contacts />} />
           <Route path="/zakupy" element={<Shopping />} />
           <Route path="/magazyn" element={<Warehouse />} />
+          <Route path="/notatnik" element={<Notes />} />
+          <Route path="/kupony" element={<Coupons />} />
           <Route path="/firma" element={<CompanyInfoPage />} />
         </Route>
       </Routes>

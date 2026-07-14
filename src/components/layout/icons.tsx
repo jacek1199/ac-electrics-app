@@ -98,3 +98,12 @@ export const IconGripVertical = (p: SVGProps<SVGSVGElement>) => (
 export const IconSort = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M3 7h11M3 12h7M3 17h4" /><path d="M17 4v16M17 20l-3-3M17 20l3-3" /></svg>
 )
+export const IconBulb = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.45 1 1.15 1 1.9V16h5v-.2c0-.75.4-1.45 1-1.9A6 6 0 0 0 12 3Z" /></svg>
+)
+export const IconNote = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M5 3h11l3 3v15H5Z" /><path d="M16 3v3h3" /><path d="M8 10h8M8 14h8M8 18h4" /></svg>
+)
+export const IconCoupon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M3 9a2 2 0 0 1 0 6" /><path d="M3 9V6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a2 2 0 0 1 0 6v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3" /><path d="M14 5v14" strokeDasharray="2.5 2.5" /></svg>
+)

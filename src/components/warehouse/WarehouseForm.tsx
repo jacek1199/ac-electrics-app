@@ -45,9 +45,14 @@ export function WarehouseForm({ item, onClose }: { item: WarehouseItem; onClose:
         <option value="nieruchomosci">Nieruchomości / miejsca</option>
         <option value="inne">Inne</option>
       </Select>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Input type="number" label="Ilość" value={draft.quantity} onChange={(e) => set('quantity', Number(e.target.value))} />
         <Input label="Jednostka" value={draft.unit} onChange={(e) => set('unit', e.target.value)} placeholder="szt. / m / l" />
+        <Select label="Priorytet uzupełnienia" value={draft.priority} onChange={(e) => set('priority', e.target.value as WarehouseItem['priority'])}>
+          <option value="wysoki">Wysoki</option>
+          <option value="sredni">Średni</option>
+          <option value="niski">Niski</option>
+        </Select>
       </div>
       <Input label="Miejsce przechowywania" value={draft.place} onChange={(e) => set('place', e.target.value)} placeholder="np. Magazyn główny, Bus 1" />
       <Input type="number" label="Wartość łączna (PLN)" value={draft.value} onChange={(e) => set('value', Number(e.target.value))} />

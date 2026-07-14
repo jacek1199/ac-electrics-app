@@ -7,6 +7,7 @@ import { IconTrash, IconPlus, IconDownload } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
 import { generateInvoicePdf } from '../../lib/pdf'
+import { computeOrderProfit } from '../../lib/calc'
 
 export function InvoiceForm({ invoice, onClose }: { invoice: Invoice; onClose: () => void }) {
   const [draft, setDraft] = useState<Invoice>(invoice)
@@ -28,11 +29,12 @@ export function InvoiceForm({ invoice, onClose }: { invoice: Invoice; onClose: (
   const fillFromOrder = (orderId: string) => {
     const o = orders.find((x) => x.id === orderId)
     if (!o) return
+    const finalPrice = computeOrderProfit(o).price
     setDraft((d) => ({
       ...d,
       orderId: o.id,
       buyer: { name: o.client.name, address: o.client.address, nip: '' },
-      items: [{ description: o.title || 'Usługa elektryczna', quantity: 1, unit: 'usł.', unitPriceNet: o.price, vatRate: 23 }],
+      items: [{ description: o.title || 'Usługa elektryczna', quantity: 1, unit: 'usł.', unitPriceNet: finalPrice, vatRate: 23 }],
     }))
   }
 

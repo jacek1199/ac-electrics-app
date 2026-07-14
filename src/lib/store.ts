@@ -13,6 +13,8 @@ import type {
   Invoice,
   Protocol,
   OrderCosts,
+  Coupon,
+  Note,
 } from './types'
 
 const defaultCosts: OrderCosts = { materials: 0, labor: 0, fuel: 0, taxPercent: 0, other: 0 }
@@ -34,6 +36,8 @@ export const emptyOrder = (): Order => ({
   price: 0,
   costs: { ...defaultCosts },
   jacekPercent: 15,
+  couponId: undefined,
+  discountPercent: 0,
   notes: '',
   notifiedDayBefore: false,
   notifiedDayOf: false,
@@ -70,9 +74,12 @@ export const emptyTask = (): TaskItem => ({
   title: '',
   content: '',
   deadline: new Date().toISOString().slice(0, 10),
+  time: '',
   done: false,
   priority: 'sredni',
   createdAt: new Date().toISOString(),
+  notifiedHourBefore: false,
+  notifiedAtTime: false,
   notifiedDayBefore: false,
   notifiedDayOf: false,
   sortOrder: Date.now(),
@@ -103,6 +110,7 @@ export const emptyShoppingItem = (): ShoppingItem => ({
   note: '',
   date: new Date().toISOString().slice(0, 10),
   sortOrder: Date.now(),
+  relatedOrderId: undefined,
 })
 
 export const emptyWarehouseItem = (): WarehouseItem => ({
@@ -115,6 +123,27 @@ export const emptyWarehouseItem = (): WarehouseItem => ({
   value: 0,
   note: '',
   sortOrder: Date.now(),
+  priority: 'sredni',
+})
+
+export const emptyCoupon = (): Coupon => ({
+  id: newId(),
+  name: '',
+  type: 'znizka_kolejna_usluga',
+  code: '',
+  percent: 10,
+  active: true,
+  note: '',
+  createdAt: new Date().toISOString(),
+})
+
+export const emptyNote = (): Note => ({
+  id: newId(),
+  title: '',
+  content: '',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  pinned: false,
 })
 
 export const emptyInvoice = (): Invoice => ({
@@ -171,14 +200,29 @@ const defaultCompanyInfo: CompanyInfo = {
 export function backfillDefaults(data: Partial<AppState>): Partial<AppState> {
   const out = { ...data }
   if (out.tasks) {
-    out.tasks = out.tasks.map((t, idx) => ({ priority: 'sredni' as const, sortOrder: idx, ...(t as Partial<TaskItem>) }) as TaskItem)
+    out.tasks = out.tasks.map(
+      (t, idx) =>
+        ({
+          priority: 'sredni' as const,
+          sortOrder: idx,
+          time: '',
+          notifiedHourBefore: false,
+          notifiedAtTime: false,
+          ...(t as Partial<TaskItem>),
+        }) as TaskItem,
+    )
   }
   if (out.shopping) {
     out.shopping = out.shopping.map((i, idx) => ({ priority: 'sredni' as const, sortOrder: idx, ...(i as Partial<ShoppingItem>) }) as ShoppingItem)
   }
   if (out.warehouse) {
-    out.warehouse = out.warehouse.map((i, idx) => ({ sortOrder: idx, ...(i as Partial<WarehouseItem>) }) as WarehouseItem)
+    out.warehouse = out.warehouse.map((i, idx) => ({ sortOrder: idx, priority: 'sredni' as const, ...(i as Partial<WarehouseItem>) }) as WarehouseItem)
   }
+  if (out.orders) {
+    out.orders = out.orders.map((o) => ({ discountPercent: 0, ...(o as Partial<Order>) }) as Order)
+  }
+  if (!out.coupons) out.coupons = []
+  if (!out.notes) out.notes = []
   return out
 }
 
@@ -193,6 +237,8 @@ export interface AppState {
   company: CompanyInfo
   invoices: Invoice[]
   protocols: Protocol[]
+  coupons: Coupon[]
+  notes: Note[]
   invoiceCounter: number
   protocolCounter: number
   pin: string
@@ -241,6 +287,14 @@ export interface AppState {
   removeProtocol: (id: string) => void
   nextProtocolNumber: () => string
 
+  addCoupon: (c: Coupon) => void
+  updateCoupon: (c: Coupon) => void
+  removeCoupon: (id: string) => void
+
+  addNote: (n: Note) => void
+  updateNote: (n: Note) => void
+  removeNote: (id: string) => void
+
   importAll: (data: Partial<AppState>) => void
 }
 
@@ -257,6 +311,8 @@ export const useStore = create<AppState>()(
       company: defaultCompanyInfo,
       invoices: [],
       protocols: [],
+      coupons: [],
+      notes: [],
       invoiceCounter: 1,
       protocolCounter: 1,
       pin: '9282',
@@ -324,6 +380,14 @@ export const useStore = create<AppState>()(
         set({ protocolCounter: n + 1 })
         return `PROT/${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(n).padStart(3, '0')}`
       },
+
+      addCoupon: (c) => set((s) => ({ coupons: [c, ...s.coupons] })),
+      updateCoupon: (c) => set((s) => ({ coupons: s.coupons.map((x) => (x.id === c.id ? c : x)) })),
+      removeCoupon: (id) => set((s) => ({ coupons: s.coupons.filter((x) => x.id !== id) })),
+
+      addNote: (n) => set((s) => ({ notes: [n, ...s.notes] })),
+      updateNote: (n) => set((s) => ({ notes: s.notes.map((x) => (x.id === n.id ? n : x)) })),
+      removeNote: (id) => set((s) => ({ notes: s.notes.filter((x) => x.id !== id) })),
 
       importAll: (data) => set(() => ({ ...data }) as AppState),
     }),

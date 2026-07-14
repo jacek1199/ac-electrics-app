@@ -88,7 +88,7 @@ export function ProtocolForm({ protocol, onClose }: { protocol: Protocol; onClos
           <option key={i.id} value={i.id}>{i.number}</option>
         ))}
       </Select>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="Numer protokołu" value={draft.number} placeholder="nadany automatycznie przy zapisie" onChange={(e) => set('number', e.target.value)} />
         <Input type="date" label="Data" value={draft.date} onChange={(e) => set('date', e.target.value)} />
       </div>
@@ -101,7 +101,7 @@ export function ProtocolForm({ protocol, onClose }: { protocol: Protocol; onClos
         onChange={(e) => set('performedBy', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
       />
       <Textarea label="Użyte materiały" value={draft.materialsUsed} onChange={(e) => set('materialsUsed', e.target.value)} />
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="Podpis — klient" value={draft.clientSignatureName} onChange={(e) => set('clientSignatureName', e.target.value)} />
         <Input label="Podpis — wykonawca" value={draft.contractorSignatureName} onChange={(e) => set('contractorSignatureName', e.target.value)} />
       </div>

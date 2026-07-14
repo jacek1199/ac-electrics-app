@@ -12,6 +12,8 @@ const SYNC_KEYS = [
   'company',
   'invoices',
   'protocols',
+  'coupons',
+  'notes',
   'invoiceCounter',
   'protocolCounter',
   'pin',

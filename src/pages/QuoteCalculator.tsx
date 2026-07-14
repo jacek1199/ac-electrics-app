@@ -9,6 +9,7 @@ import { fmtPLN } from '../lib/calc'
 import { generateQuotePdf, type QuoteData } from '../lib/pdf'
 import { IconDownload } from '../components/layout/icons'
 import { pushToast } from '../components/ui/toastBus'
+import { RateSuggestion } from '../components/ui/RateSuggestion'
 
 export function QuoteCalculator() {
   const company = useStore((s) => s.company)
@@ -25,6 +26,15 @@ export function QuoteCalculator() {
   const [downloading, setDownloading] = useState(false)
 
   const set = <K extends keyof QuoteData>(key: K, value: QuoteData[K]) => setQ((d) => ({ ...d, [key]: value }))
+
+  const applyRate = (mid: number) => {
+    const laborRate = 150
+    const materials = Math.round(mid * 0.3)
+    const laborPortion = mid - materials
+    const laborHours = Math.max(1, Math.round((laborPortion / laborRate) * 2) / 2)
+    setQ((d) => ({ ...d, laborRate, laborHours, materials }))
+    pushToast('Zastosowano szacunkowe stawki')
+  }
 
   const result = useMemo(() => {
     const labor = q.laborHours * q.laborRate
@@ -63,16 +73,17 @@ export function QuoteCalculator() {
           <CardHeader title="Dane wyceny" />
           <div className="space-y-4">
             <Input label="Tytuł / opis usługi" value={q.title} onChange={(e) => set('title', e.target.value)} placeholder="np. Wymiana instalacji — mieszkanie 50m²" />
+            <RateSuggestion text={q.title} onApply={applyRate} />
             <Input label="Klient" value={q.clientName} onChange={(e) => set('clientName', e.target.value)} />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input type="number" label="Godziny pracy" value={q.laborHours} onChange={(e) => set('laborHours', Number(e.target.value))} />
               <Input type="number" label="Stawka za godzinę (PLN)" value={q.laborRate} onChange={(e) => set('laborRate', Number(e.target.value))} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input type="number" label="Materiały (PLN)" value={q.materials} onChange={(e) => set('materials', Number(e.target.value))} />
               <Input type="number" label="Dojazd / paliwo (PLN)" value={q.fuel} onChange={(e) => set('fuel', Number(e.target.value))} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="flex justify-between text-xs text-ink-300 mb-1.5"><span>Marża</span><span>{q.marginPercent}%</span></div>
                 <input type="range" min={0} max={100} value={q.marginPercent} onChange={(e) => set('marginPercent', Number(e.target.value))} className="w-full" />

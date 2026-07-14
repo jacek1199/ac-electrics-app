@@ -91,6 +91,7 @@ interface NotifyDeps {
 /** Checks tasks & order deadlines and fires day-before / day-of alerts once each. */
 export function checkDeadlineNotifications({ tasks, orders, updateTask, updateOrder }: NotifyDeps) {
   const today = new Date()
+  const now = new Date()
 
   for (const t of tasks) {
     if (t.done || !t.deadline) continue
@@ -102,6 +103,20 @@ export function checkDeadlineNotifications({ tasks, orders, updateTask, updateOr
     } else if (diff === 0 && !t.notifiedDayOf) {
       notify('Zadanie dzisiaj', `${t.title || 'Zadanie'} — termin dzisiaj`)
       updateTask({ ...t, notifiedDayOf: true })
+    }
+
+    if (t.time && diff === 0) {
+      const [h, m] = t.time.split(':').map(Number)
+      const scheduled = new Date(d)
+      scheduled.setHours(h, m, 0, 0)
+      const hourBefore = new Date(scheduled.getTime() - 60 * 60 * 1000)
+      if (!t.notifiedHourBefore && now >= hourBefore && now < scheduled) {
+        notify('Za godzinę', `${t.title || 'Zadanie'} — o ${t.time}`)
+        updateTask({ ...t, notifiedHourBefore: true })
+      } else if (!t.notifiedAtTime && now >= scheduled) {
+        notify('Teraz', `${t.title || 'Zadanie'} — zaplanowane na ${t.time}`)
+        updateTask({ ...t, notifiedAtTime: true })
+      }
     }
   }
 
