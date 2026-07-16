@@ -33,7 +33,7 @@ function sortItems(items: WarehouseItem[], mode: SortMode): WarehouseItem[] {
   arr.sort((a, b) => {
     switch (mode) {
       case 'priorytet':
-        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.name.localeCompare(b.name, 'pl')
+        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.value - b.value
       case 'az':
         return a.name.localeCompare(b.name, 'pl')
       case 'wartosc_rosnaco':

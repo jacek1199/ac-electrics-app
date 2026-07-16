@@ -22,7 +22,7 @@ const categoryLabels: Record<ShoppingCategory, string> = {
 type SortMode = 'inteligentne' | 'custom' | 'priorytet' | 'az' | 'najnowsze' | 'cena_rosnaco' | 'cena_malejaco'
 
 const sortOptions = [
-  { value: 'inteligentne', label: 'Automatycznie (priorytet, termin, cena)' },
+  { value: 'inteligentne', label: 'Automatycznie (priorytet, cena rosnąco)' },
   { value: 'custom', label: 'Kolejność własna' },
   { value: 'priorytet', label: 'Priorytet' },
   { value: 'az', label: 'Nazwa A-Z' },
@@ -36,7 +36,7 @@ function sortItems(items: ShoppingItem[], mode: SortMode): ShoppingItem[] {
   arr.sort((a, b) => {
     switch (mode) {
       case 'priorytet':
-        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.name.localeCompare(b.name, 'pl')
+        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.price * a.quantity - b.price * b.quantity
       case 'az':
         return a.name.localeCompare(b.name, 'pl')
       case 'najnowsze':
@@ -48,7 +48,7 @@ function sortItems(items: ShoppingItem[], mode: SortMode): ShoppingItem[] {
       case 'custom':
         return a.sortOrder - b.sortOrder
       default:
-        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.date.localeCompare(b.date) || a.price * a.quantity - b.price * b.quantity
+        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.price * a.quantity - b.price * b.quantity
     }
   })
   return arr
