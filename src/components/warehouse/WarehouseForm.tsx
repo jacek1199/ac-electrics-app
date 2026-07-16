@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { WarehouseItem } from '../../lib/types'
 import { useStore } from '../../lib/store'
+import { useAutosave } from '../../lib/useAutosave'
 import { Input, Select } from '../ui/Field'
 import { Button } from '../ui/Button'
 import { IconTrash } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+
+const canSave = (d: WarehouseItem) => d.name.trim().length > 0
 
 export function WarehouseForm({ item, onClose }: { item: WarehouseItem; onClose: () => void }) {
   const [draft, setDraft] = useState<WarehouseItem>(item)
@@ -13,16 +16,26 @@ export function WarehouseForm({ item, onClose }: { item: WarehouseItem; onClose:
   const updateWarehouseItem = useStore((s) => s.updateWarehouseItem)
   const removeWarehouseItem = useStore((s) => s.removeWarehouseItem)
   const isNew = !useStore.getState().warehouse.some((w) => w.id === item.id)
+  const wasNewRef = useRef(isNew)
 
   const set = <K extends keyof WarehouseItem>(key: K, value: WarehouseItem[K]) => setDraft((d) => ({ ...d, [key]: value }))
 
+  const persist = (d: WarehouseItem) => {
+    if (wasNewRef.current) {
+      addWarehouseItem(d)
+      wasNewRef.current = false
+    } else {
+      updateWarehouseItem(d)
+    }
+  }
+  useAutosave(draft, canSave, persist)
+
   const save = () => {
-    if (!draft.name.trim()) {
+    if (!canSave(draft)) {
       pushToast('Podaj nazwę pozycji', 'danger')
       return
     }
-    if (isNew) addWarehouseItem(draft)
-    else updateWarehouseItem(draft)
+    persist(draft)
     pushToast('Zapisano')
     onClose()
   }
@@ -57,13 +70,14 @@ export function WarehouseForm({ item, onClose }: { item: WarehouseItem; onClose:
       <Input label="Miejsce przechowywania" value={draft.place} onChange={(e) => set('place', e.target.value)} placeholder="np. Magazyn główny, Bus 1" />
       <Input type="number" label="Wartość łączna (PLN)" value={draft.value} onChange={(e) => set('value', Number(e.target.value))} />
       <Input label="Notatka" value={draft.note} onChange={(e) => set('note', e.target.value)} />
+      <p className="text-xs text-ink-500">Zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">
         {!isNew ? (
           <Button variant="danger" size="sm" icon={<IconTrash className="w-4 h-4" />} onClick={del}>Usuń</Button>
         ) : <span />}
         <div className="flex gap-2">
-          <Button variant="subtle" onClick={onClose}>Anuluj</Button>
+          <Button variant="subtle" onClick={onClose}>Zamknij</Button>
           <Button variant="primary" onClick={save}>Zapisz</Button>
         </div>
       </div>

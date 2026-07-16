@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { TaskItem } from '../../lib/types'
 import { useStore } from '../../lib/store'
+import { useAutosave } from '../../lib/useAutosave'
 import { Input, Select, Textarea } from '../ui/Field'
 import { Button } from '../ui/Button'
 import { IconTrash } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+
+const canSave = (d: TaskItem) => d.title.trim().length > 0
 
 export function TaskForm({ task, onClose }: { task: TaskItem; onClose: () => void }) {
   const [draft, setDraft] = useState<TaskItem>(task)
@@ -14,17 +17,27 @@ export function TaskForm({ task, onClose }: { task: TaskItem; onClose: () => voi
   const updateTask = useStore((s) => s.updateTask)
   const removeTask = useStore((s) => s.removeTask)
   const isNew = !useStore.getState().tasks.some((t) => t.id === task.id)
+  const wasNewRef = useRef(isNew)
 
   const set = <K extends keyof TaskItem>(key: K, value: TaskItem[K]) => setDraft((d) => ({ ...d, [key]: value }))
 
+  const persist = (d: TaskItem) => {
+    const patch = { ...d, notifiedDayBefore: false, notifiedDayOf: false, notifiedHourBefore: false, notifiedAtTime: false }
+    if (wasNewRef.current) {
+      addTask(patch)
+      wasNewRef.current = false
+    } else {
+      updateTask(patch)
+    }
+  }
+  useAutosave(draft, canSave, persist)
+
   const save = () => {
-    if (!draft.title.trim()) {
+    if (!canSave(draft)) {
       pushToast('Podaj tytuł zadania', 'danger')
       return
     }
-    const patch = { ...draft, notifiedDayBefore: false, notifiedDayOf: false, notifiedHourBefore: false, notifiedAtTime: false }
-    if (isNew) addTask(patch)
-    else updateTask(patch)
+    persist(draft)
     pushToast(isNew ? 'Zadanie dodane' : 'Zadanie zaktualizowane')
     onClose()
   }
@@ -64,13 +77,14 @@ export function TaskForm({ task, onClose }: { task: TaskItem; onClose: () => voi
         <input type="checkbox" checked={draft.done} onChange={(e) => set('done', e.target.checked)} className="accent-gold w-4 h-4" />
         Zadanie ukończone
       </label>
+      <p className="text-xs text-ink-500">Zadanie zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">
         {!isNew ? (
           <Button variant="danger" size="sm" icon={<IconTrash className="w-4 h-4" />} onClick={del}>Usuń</Button>
         ) : <span />}
         <div className="flex gap-2">
-          <Button variant="subtle" onClick={onClose}>Anuluj</Button>
+          <Button variant="subtle" onClick={onClose}>Zamknij</Button>
           <Button variant="primary" onClick={save}>Zapisz</Button>
         </div>
       </div>

@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Transaction } from '../../lib/types'
 import { useStore } from '../../lib/store'
+import { useAutosave } from '../../lib/useAutosave'
 import { Input, Select } from '../ui/Field'
 import { Button } from '../ui/Button'
 import { IconTrash } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+
+const canSave = (d: Transaction) => d.label.trim().length > 0
 
 export function TransactionForm({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
   const [draft, setDraft] = useState<Transaction>(tx)
@@ -13,16 +16,26 @@ export function TransactionForm({ tx, onClose }: { tx: Transaction; onClose: () 
   const updateTransaction = useStore((s) => s.updateTransaction)
   const removeTransaction = useStore((s) => s.removeTransaction)
   const isNew = !useStore.getState().transactions.some((t) => t.id === tx.id)
+  const wasNewRef = useRef(isNew)
 
   const set = <K extends keyof Transaction>(key: K, value: Transaction[K]) => setDraft((d) => ({ ...d, [key]: value }))
 
+  const persist = (d: Transaction) => {
+    if (wasNewRef.current) {
+      addTransaction(d)
+      wasNewRef.current = false
+    } else {
+      updateTransaction(d)
+    }
+  }
+  useAutosave(draft, canSave, persist)
+
   const save = () => {
-    if (!draft.label.trim()) {
+    if (!canSave(draft)) {
       pushToast('Podaj nazwę pozycji', 'danger')
       return
     }
-    if (isNew) addTransaction(draft)
-    else updateTransaction(draft)
+    persist(draft)
     pushToast('Zapisano')
     onClose()
   }
@@ -61,13 +74,14 @@ export function TransactionForm({ tx, onClose }: { tx: Transaction; onClose: () 
         <Input type="date" label="Data" value={draft.date} onChange={(e) => set('date', e.target.value)} />
       </div>
       <Input label="Notatka (opcjonalnie)" value={draft.note ?? ''} onChange={(e) => set('note', e.target.value)} />
+      <p className="text-xs text-ink-500">Zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">
         {!isNew ? (
           <Button variant="danger" size="sm" icon={<IconTrash className="w-4 h-4" />} onClick={del}>Usuń</Button>
         ) : <span />}
         <div className="flex gap-2">
-          <Button variant="subtle" onClick={onClose}>Anuluj</Button>
+          <Button variant="subtle" onClick={onClose}>Zamknij</Button>
           <Button variant="primary" onClick={save}>Zapisz</Button>
         </div>
       </div>

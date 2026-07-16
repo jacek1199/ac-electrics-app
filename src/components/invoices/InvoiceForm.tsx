@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Invoice, InvoiceItem } from '../../lib/types'
 import { useStore } from '../../lib/store'
+import { useAutosave } from '../../lib/useAutosave'
 import { Input, Select, Textarea } from '../ui/Field'
 import { Button } from '../ui/Button'
 import { IconTrash, IconPlus, IconDownload } from '../layout/icons'
@@ -8,6 +9,8 @@ import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
 import { generateInvoicePdf } from '../../lib/pdf'
 import { computeOrderProfit } from '../../lib/calc'
+
+const canSave = (d: Invoice) => d.buyer.name.trim().length > 0 || d.items.some((it) => it.description.trim().length > 0)
 
 export function InvoiceForm({ invoice, onClose }: { invoice: Invoice; onClose: () => void }) {
   const [draft, setDraft] = useState<Invoice>(invoice)
@@ -19,6 +22,7 @@ export function InvoiceForm({ invoice, onClose }: { invoice: Invoice; onClose: (
   const removeInvoice = useStore((s) => s.removeInvoice)
   const nextInvoiceNumber = useStore((s) => s.nextInvoiceNumber)
   const isNew = !useStore.getState().invoices.some((i) => i.id === invoice.id)
+  const wasNewRef = useRef(isNew)
 
   const set = <K extends keyof Invoice>(key: K, value: Invoice[K]) => setDraft((d) => ({ ...d, [key]: value }))
   const setBuyer = <K extends keyof Invoice['buyer']>(key: K, value: Invoice['buyer'][K]) =>
@@ -38,13 +42,22 @@ export function InvoiceForm({ invoice, onClose }: { invoice: Invoice; onClose: (
     }))
   }
 
-  const save = () => {
-    let num = draft.number
+  const persist = (d: Invoice) => {
+    let num = d.number
     if (!num) num = nextInvoiceNumber()
-    const final = { ...draft, number: num }
-    if (isNew) addInvoice(final)
-    else updateInvoice(final)
-    setDraft(final)
+    const final = { ...d, number: num }
+    if (wasNewRef.current) {
+      addInvoice(final)
+      wasNewRef.current = false
+    } else {
+      updateInvoice(final)
+    }
+    if (num !== d.number) setDraft(final)
+  }
+  useAutosave(draft, canSave, persist)
+
+  const save = () => {
+    persist(draft)
     pushToast(isNew ? 'Faktura wystawiona' : 'Faktura zaktualizowana')
     onClose()
   }
@@ -168,6 +181,7 @@ export function InvoiceForm({ invoice, onClose }: { invoice: Invoice; onClose: (
       </div>
 
       <Textarea label="Uwagi" value={draft.notes} onChange={(e) => set('notes', e.target.value)} />
+      <p className="text-xs text-ink-500">Zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-navy-700">
         <div className="flex gap-2">
@@ -179,7 +193,7 @@ export function InvoiceForm({ invoice, onClose }: { invoice: Invoice; onClose: (
           </Button>
         </div>
         <div className="flex gap-2">
-          <Button variant="subtle" onClick={onClose}>Anuluj</Button>
+          <Button variant="subtle" onClick={onClose}>Zamknij</Button>
           <Button variant="primary" onClick={save}>Zapisz fakturę</Button>
         </div>
       </div>

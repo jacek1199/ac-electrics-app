@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { ShoppingItem } from '../../lib/types'
 import { useStore } from '../../lib/store'
+import { useAutosave } from '../../lib/useAutosave'
 import { Input, Select } from '../ui/Field'
 import { Button } from '../ui/Button'
 import { IconTrash } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+
+const canSave = (d: ShoppingItem) => d.name.trim().length > 0
 
 export function ShoppingForm({ item, onClose }: { item: ShoppingItem; onClose: () => void }) {
   const [draft, setDraft] = useState<ShoppingItem>(item)
@@ -13,16 +16,26 @@ export function ShoppingForm({ item, onClose }: { item: ShoppingItem; onClose: (
   const updateShoppingItem = useStore((s) => s.updateShoppingItem)
   const removeShoppingItem = useStore((s) => s.removeShoppingItem)
   const isNew = !useStore.getState().shopping.some((s) => s.id === item.id)
+  const wasNewRef = useRef(isNew)
 
   const set = <K extends keyof ShoppingItem>(key: K, value: ShoppingItem[K]) => setDraft((d) => ({ ...d, [key]: value }))
 
+  const persist = (d: ShoppingItem) => {
+    if (wasNewRef.current) {
+      addShoppingItem(d)
+      wasNewRef.current = false
+    } else {
+      updateShoppingItem(d)
+    }
+  }
+  useAutosave(draft, canSave, persist)
+
   const save = () => {
-    if (!draft.name.trim()) {
+    if (!canSave(draft)) {
       pushToast('Podaj nazwę produktu', 'danger')
       return
     }
-    if (isNew) addShoppingItem(draft)
-    else updateShoppingItem(draft)
+    persist(draft)
     pushToast('Zapisano')
     onClose()
   }
@@ -56,7 +69,7 @@ export function ShoppingForm({ item, onClose }: { item: ShoppingItem; onClose: (
       </Select>
       <Input label="Notatka" value={draft.note} onChange={(e) => set('note', e.target.value)} />
       <p className="text-xs text-ink-500">
-        Status "kupione" zaznaczasz na liście zakupów (odhaczenie automatycznie dodaje wydatek).
+        Zapisuje się automatycznie w trakcie pisania. Status "kupione" zaznaczasz na liście zakupów (odhaczenie automatycznie dodaje wydatek).
       </p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">
@@ -64,7 +77,7 @@ export function ShoppingForm({ item, onClose }: { item: ShoppingItem; onClose: (
           <Button variant="danger" size="sm" icon={<IconTrash className="w-4 h-4" />} onClick={del}>Usuń</Button>
         ) : <span />}
         <div className="flex gap-2">
-          <Button variant="subtle" onClick={onClose}>Anuluj</Button>
+          <Button variant="subtle" onClick={onClose}>Zamknij</Button>
           <Button variant="primary" onClick={save}>Zapisz</Button>
         </div>
       </div>

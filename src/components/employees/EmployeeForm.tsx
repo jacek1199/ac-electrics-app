@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Employee } from '../../lib/types'
 import { useStore } from '../../lib/store'
+import { useAutosave } from '../../lib/useAutosave'
 import { Input } from '../ui/Field'
 import { Button } from '../ui/Button'
 import { IconTrash } from '../layout/icons'
@@ -8,12 +9,15 @@ import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
 import { monthKey, employeePayroll, fmtPLN } from '../../lib/calc'
 
+const canSave = (d: Employee) => d.firstName.trim().length > 0
+
 export function EmployeeForm({ employee, onClose }: { employee: Employee; onClose: () => void }) {
   const [draft, setDraft] = useState<Employee>(employee)
   const addEmployee = useStore((s) => s.addEmployee)
   const updateEmployee = useStore((s) => s.updateEmployee)
   const removeEmployee = useStore((s) => s.removeEmployee)
   const isNew = !useStore.getState().employees.some((e) => e.id === employee.id)
+  const wasNewRef = useRef(isNew)
 
   const set = <K extends keyof Employee>(key: K, value: Employee[K]) => setDraft((d) => ({ ...d, [key]: value }))
   const mKey = monthKey(new Date())
@@ -22,13 +26,22 @@ export function EmployeeForm({ employee, onClose }: { employee: Employee; onClos
     setDraft((d) => ({ ...d, monthlyHours: { ...d.monthlyHours, [mKey]: value } }))
   }
 
+  const persist = (d: Employee) => {
+    if (wasNewRef.current) {
+      addEmployee(d)
+      wasNewRef.current = false
+    } else {
+      updateEmployee(d)
+    }
+  }
+  useAutosave(draft, canSave, persist)
+
   const save = () => {
-    if (!draft.firstName.trim()) {
+    if (!canSave(draft)) {
       pushToast('Podaj imię pracownika', 'danger')
       return
     }
-    if (isNew) addEmployee(draft)
-    else updateEmployee(draft)
+    persist(draft)
     pushToast(isNew ? 'Pracownik dodany' : 'Dane zaktualizowane')
     onClose()
   }
@@ -74,13 +87,14 @@ export function EmployeeForm({ employee, onClose }: { employee: Employee; onClos
       </div>
 
       <Input label="Notatka" value={draft.note} onChange={(e) => set('note', e.target.value)} />
+      <p className="text-xs text-ink-500">Zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">
         {!isNew ? (
           <Button variant="danger" size="sm" icon={<IconTrash className="w-4 h-4" />} onClick={del}>Usuń</Button>
         ) : <span />}
         <div className="flex gap-2">
-          <Button variant="subtle" onClick={onClose}>Anuluj</Button>
+          <Button variant="subtle" onClick={onClose}>Zamknij</Button>
           <Button variant="primary" onClick={save}>Zapisz</Button>
         </div>
       </div>

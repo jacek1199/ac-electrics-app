@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Protocol } from '../../lib/types'
 import { useStore } from '../../lib/store'
+import { useAutosave } from '../../lib/useAutosave'
 import { Input, Select, Textarea } from '../ui/Field'
 import { Button } from '../ui/Button'
 import { IconTrash, IconDownload } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
 import { generateProtocolPdf } from '../../lib/pdf'
+
+const canSave = (d: Protocol) => d.client.trim().length > 0 || d.scopeOfWork.trim().length > 0
 
 export function ProtocolForm({ protocol, onClose }: { protocol: Protocol; onClose: () => void }) {
   const [draft, setDraft] = useState<Protocol>(protocol)
@@ -20,6 +23,7 @@ export function ProtocolForm({ protocol, onClose }: { protocol: Protocol; onClos
   const removeProtocol = useStore((s) => s.removeProtocol)
   const nextProtocolNumber = useStore((s) => s.nextProtocolNumber)
   const isNew = !useStore.getState().protocols.some((p) => p.id === protocol.id)
+  const wasNewRef = useRef(isNew)
 
   const set = <K extends keyof Protocol>(key: K, value: Protocol[K]) => setDraft((d) => ({ ...d, [key]: value }))
 
@@ -37,13 +41,22 @@ export function ProtocolForm({ protocol, onClose }: { protocol: Protocol; onClos
     }))
   }
 
-  const save = () => {
-    let num = draft.number
+  const persist = (d: Protocol) => {
+    let num = d.number
     if (!num) num = nextProtocolNumber()
-    const final = { ...draft, number: num }
-    if (isNew) addProtocol(final)
-    else updateProtocol(final)
-    setDraft(final)
+    const final = { ...d, number: num }
+    if (wasNewRef.current) {
+      addProtocol(final)
+      wasNewRef.current = false
+    } else {
+      updateProtocol(final)
+    }
+    if (num !== d.number) setDraft(final)
+  }
+  useAutosave(draft, canSave, persist)
+
+  const save = () => {
+    persist(draft)
     pushToast(isNew ? 'Protokół utworzony' : 'Protokół zaktualizowany')
     onClose()
   }
@@ -106,6 +119,7 @@ export function ProtocolForm({ protocol, onClose }: { protocol: Protocol; onClos
         <Input label="Podpis — wykonawca" value={draft.contractorSignatureName} onChange={(e) => set('contractorSignatureName', e.target.value)} />
       </div>
       <Textarea label="Uwagi" value={draft.notes} onChange={(e) => set('notes', e.target.value)} />
+      <p className="text-xs text-ink-500">Zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-navy-700">
         <div className="flex gap-2">
@@ -117,7 +131,7 @@ export function ProtocolForm({ protocol, onClose }: { protocol: Protocol; onClos
           </Button>
         </div>
         <div className="flex gap-2">
-          <Button variant="subtle" onClick={onClose}>Anuluj</Button>
+          <Button variant="subtle" onClick={onClose}>Zamknij</Button>
           <Button variant="primary" onClick={save}>Zapisz protokół</Button>
         </div>
       </div>

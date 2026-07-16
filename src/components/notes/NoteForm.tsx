@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Note } from '../../lib/types'
 import { useStore } from '../../lib/store'
+import { useAutosave } from '../../lib/useAutosave'
 import { Input, Textarea } from '../ui/Field'
 import { Button } from '../ui/Button'
 import { IconTrash } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+
+const canSave = (d: Note) => d.title.trim().length > 0 || d.content.trim().length > 0
 
 export function NoteForm({ note, onClose }: { note: Note; onClose: () => void }) {
   const [draft, setDraft] = useState<Note>(note)
@@ -13,17 +16,27 @@ export function NoteForm({ note, onClose }: { note: Note; onClose: () => void })
   const updateNote = useStore((s) => s.updateNote)
   const removeNote = useStore((s) => s.removeNote)
   const isNew = !useStore.getState().notes.some((n) => n.id === note.id)
+  const wasNewRef = useRef(isNew)
 
   const set = <K extends keyof Note>(key: K, value: Note[K]) => setDraft((d) => ({ ...d, [key]: value }))
 
+  const persist = (d: Note) => {
+    const patch = { ...d, updatedAt: new Date().toISOString() }
+    if (wasNewRef.current) {
+      addNote(patch)
+      wasNewRef.current = false
+    } else {
+      updateNote(patch)
+    }
+  }
+  useAutosave(draft, canSave, persist)
+
   const save = () => {
-    if (!draft.title.trim() && !draft.content.trim()) {
+    if (!canSave(draft)) {
       pushToast('Notatka jest pusta', 'danger')
       return
     }
-    const patch = { ...draft, updatedAt: new Date().toISOString() }
-    if (isNew) addNote(patch)
-    else updateNote(patch)
+    persist(draft)
     pushToast('Zapisano')
     onClose()
   }
@@ -44,13 +57,14 @@ export function NoteForm({ note, onClose }: { note: Note; onClose: () => void })
         <input type="checkbox" checked={draft.pinned} onChange={(e) => set('pinned', e.target.checked)} className="accent-gold w-4 h-4" />
         Przypnij na górze
       </label>
+      <p className="text-xs text-ink-500">Notatka zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">
         {!isNew ? (
           <Button variant="danger" size="sm" icon={<IconTrash className="w-4 h-4" />} onClick={del}>Usuń</Button>
         ) : <span />}
         <div className="flex gap-2">
-          <Button variant="subtle" onClick={onClose}>Anuluj</Button>
+          <Button variant="subtle" onClick={onClose}>Zamknij</Button>
           <Button variant="primary" onClick={save}>Zapisz</Button>
         </div>
       </div>

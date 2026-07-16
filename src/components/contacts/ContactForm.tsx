@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Contact } from '../../lib/types'
 import { useStore } from '../../lib/store'
+import { useAutosave } from '../../lib/useAutosave'
 import { Input, Select, Textarea } from '../ui/Field'
 import { Button } from '../ui/Button'
 import { IconTrash } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+
+const canSave = (d: Contact) => d.firstName.trim().length > 0 || d.companyName.trim().length > 0
 
 export function ContactForm({ contact, onClose }: { contact: Contact; onClose: () => void }) {
   const [draft, setDraft] = useState<Contact>(contact)
@@ -13,16 +16,26 @@ export function ContactForm({ contact, onClose }: { contact: Contact; onClose: (
   const updateContact = useStore((s) => s.updateContact)
   const removeContact = useStore((s) => s.removeContact)
   const isNew = !useStore.getState().contacts.some((c) => c.id === contact.id)
+  const wasNewRef = useRef(isNew)
 
   const set = <K extends keyof Contact>(key: K, value: Contact[K]) => setDraft((d) => ({ ...d, [key]: value }))
 
+  const persist = (d: Contact) => {
+    if (wasNewRef.current) {
+      addContact(d)
+      wasNewRef.current = false
+    } else {
+      updateContact(d)
+    }
+  }
+  useAutosave(draft, canSave, persist)
+
   const save = () => {
-    if (!draft.firstName.trim() && !draft.companyName.trim()) {
+    if (!canSave(draft)) {
       pushToast('Podaj imię lub nazwę firmy', 'danger')
       return
     }
-    if (isNew) addContact(draft)
-    else updateContact(draft)
+    persist(draft)
     pushToast(isNew ? 'Kontakt dodany' : 'Kontakt zaktualizowany')
     onClose()
   }
@@ -56,13 +69,14 @@ export function ContactForm({ contact, onClose }: { contact: Contact; onClose: (
       <Input label="Adres" value={draft.address} onChange={(e) => set('address', e.target.value)} />
       <Input label="NIP (opcjonalnie)" value={draft.nip} onChange={(e) => set('nip', e.target.value)} />
       <Textarea label="Notatka" value={draft.note} onChange={(e) => set('note', e.target.value)} />
+      <p className="text-xs text-ink-500">Zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">
         {!isNew ? (
           <Button variant="danger" size="sm" icon={<IconTrash className="w-4 h-4" />} onClick={del}>Usuń</Button>
         ) : <span />}
         <div className="flex gap-2">
-          <Button variant="subtle" onClick={onClose}>Anuluj</Button>
+          <Button variant="subtle" onClick={onClose}>Zamknij</Button>
           <Button variant="primary" onClick={save}>Zapisz</Button>
         </div>
       </div>

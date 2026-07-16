@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Coupon } from '../../lib/types'
 import { useStore } from '../../lib/store'
+import { useAutosave } from '../../lib/useAutosave'
 import { Input, Select } from '../ui/Field'
 import { Button } from '../ui/Button'
 import { IconTrash } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+
+const canSave = (d: Coupon) => d.name.trim().length > 0
 
 export function CouponForm({ coupon, onClose }: { coupon: Coupon; onClose: () => void }) {
   const [draft, setDraft] = useState<Coupon>(coupon)
@@ -13,16 +16,26 @@ export function CouponForm({ coupon, onClose }: { coupon: Coupon; onClose: () =>
   const updateCoupon = useStore((s) => s.updateCoupon)
   const removeCoupon = useStore((s) => s.removeCoupon)
   const isNew = !useStore.getState().coupons.some((c) => c.id === coupon.id)
+  const wasNewRef = useRef(isNew)
 
   const set = <K extends keyof Coupon>(key: K, value: Coupon[K]) => setDraft((d) => ({ ...d, [key]: value }))
 
+  const persist = (d: Coupon) => {
+    if (wasNewRef.current) {
+      addCoupon(d)
+      wasNewRef.current = false
+    } else {
+      updateCoupon(d)
+    }
+  }
+  useAutosave(draft, canSave, persist)
+
   const save = () => {
-    if (!draft.name.trim()) {
+    if (!canSave(draft)) {
       pushToast('Podaj nazwę kuponu', 'danger')
       return
     }
-    if (isNew) addCoupon(draft)
-    else updateCoupon(draft)
+    persist(draft)
     pushToast('Zapisano')
     onClose()
   }
@@ -51,13 +64,14 @@ export function CouponForm({ coupon, onClose }: { coupon: Coupon; onClose: () =>
         <input type="checkbox" checked={draft.active} onChange={(e) => set('active', e.target.checked)} className="accent-gold w-4 h-4" />
         Aktywny (widoczny do wyboru przy zleceniach)
       </label>
+      <p className="text-xs text-ink-500">Zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">
         {!isNew ? (
           <Button variant="danger" size="sm" icon={<IconTrash className="w-4 h-4" />} onClick={del}>Usuń</Button>
         ) : <span />}
         <div className="flex gap-2">
-          <Button variant="subtle" onClick={onClose}>Anuluj</Button>
+          <Button variant="subtle" onClick={onClose}>Zamknij</Button>
           <Button variant="primary" onClick={save}>Zapisz</Button>
         </div>
       </div>

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Order, OrderStatus, ShoppingItem } from '../../lib/types'
 import { useStore, emptyShoppingItem } from '../../lib/store'
+import { useAutosave } from '../../lib/useAutosave'
 import { Input, Select, Textarea } from '../ui/Field'
 import { Button } from '../ui/Button'
 import { LocationPicker } from '../map/LocationPicker'
@@ -10,6 +11,8 @@ import { RateSuggestion } from '../ui/RateSuggestion'
 import { IconTrash, IconCheck, IconClock, IconX as IconCancel, IconPlus, IconShopping } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+
+const canSave = (d: Order) => d.title.trim().length > 0
 
 export function OrderForm({ order, onClose }: { order: Order; onClose: () => void }) {
   const [draft, setDraft] = useState<Order>(order)
@@ -23,6 +26,7 @@ export function OrderForm({ order, onClose }: { order: Order; onClose: () => voi
   const addShoppingItem = useStore((s) => s.addShoppingItem)
   const removeShoppingItem = useStore((s) => s.removeShoppingItem)
   const isNew = !useStore.getState().orders.some((o) => o.id === order.id)
+  const wasNewRef = useRef(isNew)
 
   const [purchaseDraft, setPurchaseDraft] = useState({ name: '', quantity: 1, price: 0 })
 
@@ -64,13 +68,22 @@ export function OrderForm({ order, onClose }: { order: Order; onClose: () => voi
     setDraft((d) => ({ ...d, couponId: coupon?.id, discountPercent: coupon ? coupon.percent : 0 }))
   }
 
+  const persist = (d: Order) => {
+    if (wasNewRef.current) {
+      addOrder(d)
+      wasNewRef.current = false
+    } else {
+      updateOrder(d)
+    }
+  }
+  useAutosave(draft, canSave, persist)
+
   const save = () => {
-    if (!draft.title.trim()) {
+    if (!canSave(draft)) {
       pushToast('Podaj tytuł zlecenia', 'danger')
       return
     }
-    if (isNew) addOrder(draft)
-    else updateOrder(draft)
+    persist(draft)
     pushToast(isNew ? 'Zlecenie dodane' : 'Zlecenie zaktualizowane')
     onClose()
   }
@@ -291,6 +304,7 @@ export function OrderForm({ order, onClose }: { order: Order; onClose: () => voi
       )}
 
       <Textarea label="Notatki" value={draft.notes} onChange={(e) => set('notes', e.target.value)} />
+      <p className="text-xs text-ink-500">Zlecenie zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">
         {!isNew ? (
@@ -299,7 +313,7 @@ export function OrderForm({ order, onClose }: { order: Order; onClose: () => voi
           </Button>
         ) : <span />}
         <div className="flex gap-2">
-          <Button variant="subtle" size="md" onClick={onClose}>Anuluj</Button>
+          <Button variant="subtle" size="md" onClick={onClose}>Zamknij</Button>
           <Button variant="primary" size="md" onClick={save}>
             {draft.status === 'zakonczone' && !wasAlreadyCompleted ? 'Zatwierdź zakończenie i zapisz' : 'Zapisz zlecenie'}
           </Button>

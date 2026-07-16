@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../lib/store'
+import { useAutosave } from '../lib/useAutosave'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Card, CardHeader } from '../components/ui/Card'
 import { Input } from '../components/ui/Field'
@@ -46,6 +47,8 @@ export function CompanyInfoPage() {
   const [draft, setDraft] = useState(company)
 
   const set = <K extends keyof typeof draft>(key: K, value: (typeof draft)[K]) => setDraft((d) => ({ ...d, [key]: value }))
+
+  useAutosave(draft, () => true, updateCompany)
 
   const save = () => {
     updateCompany(draft)
@@ -100,7 +103,8 @@ export function CompanyInfoPage() {
 
       <PinSettings />
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        <span className="text-xs text-ink-500">Zapisuje się automatycznie w trakcie pisania.</span>
         <Button variant="primary" onClick={save}>Zapisz dane firmy</Button>
       </div>
     </div>
