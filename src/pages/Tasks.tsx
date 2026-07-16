@@ -16,7 +16,7 @@ import { IconPlus, IconChecklist } from '../components/layout/icons'
 type SortMode = 'inteligentne' | 'custom' | 'priorytet' | 'termin' | 'az'
 
 const sortOptions = [
-  { value: 'inteligentne', label: 'Automatycznie (termin, priorytet)' },
+  { value: 'inteligentne', label: 'Automatycznie (priorytet, termin)' },
   { value: 'custom', label: 'Kolejność własna' },
   { value: 'priorytet', label: 'Priorytet' },
   { value: 'termin', label: 'Termin' },
@@ -38,7 +38,7 @@ function sortTasks(tasks: TaskItem[], mode: SortMode): TaskItem[] {
       case 'custom':
         return a.sortOrder - b.sortOrder
       default:
-        return a.deadline.localeCompare(b.deadline) || priorityOrder[a.priority] - priorityOrder[b.priority]
+        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.deadline.localeCompare(b.deadline)
     }
   })
   return arr

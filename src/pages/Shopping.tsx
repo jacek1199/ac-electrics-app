@@ -22,7 +22,7 @@ const categoryLabels: Record<ShoppingCategory, string> = {
 type SortMode = 'inteligentne' | 'custom' | 'priorytet' | 'az' | 'najnowsze' | 'cena_rosnaco' | 'cena_malejaco'
 
 const sortOptions = [
-  { value: 'inteligentne', label: 'Automatycznie (termin, priorytet, cena)' },
+  { value: 'inteligentne', label: 'Automatycznie (priorytet, termin, cena)' },
   { value: 'custom', label: 'Kolejność własna' },
   { value: 'priorytet', label: 'Priorytet' },
   { value: 'az', label: 'Nazwa A-Z' },
@@ -48,7 +48,7 @@ function sortItems(items: ShoppingItem[], mode: SortMode): ShoppingItem[] {
       case 'custom':
         return a.sortOrder - b.sortOrder
       default:
-        return a.date.localeCompare(b.date) || priorityOrder[a.priority] - priorityOrder[b.priority] || a.price * a.quantity - b.price * b.quantity
+        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.date.localeCompare(b.date) || a.price * a.quantity - b.price * b.quantity
     }
   })
   return arr
