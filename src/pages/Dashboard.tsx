@@ -119,7 +119,7 @@ export function Dashboard() {
 
   const upcoming = [...tasks]
     .filter((t) => !t.done)
-    .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+    .sort((a, b) => `${a.deadline}T${a.time || '00:00'}`.localeCompare(`${b.deadline}T${b.time || '00:00'}`))
     .slice(0, 5)
 
   return (
@@ -264,7 +264,7 @@ export function Dashboard() {
                     <div className="text-xs text-ink-500 capitalize">{t.assignee === 'adam' ? 'Adam' : 'Jacek'}</div>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-gold shrink-0">
-                    <IconClock className="w-3.5 h-3.5" /> {fmtDate(t.deadline)}
+                    <IconClock className="w-3.5 h-3.5" /> {fmtDate(t.deadline)}{t.time && ` ${t.time}`}
                   </div>
                 </div>
               ))}

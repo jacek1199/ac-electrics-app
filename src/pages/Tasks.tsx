@@ -23,6 +23,11 @@ const sortOptions = [
   { value: 'az', label: 'Nazwa A-Z' },
 ]
 
+// Deadline + time combined into one comparable key — sorting by `deadline`
+// alone ignores the hour, so a 20:00 task could sort before a 10:00 task on
+// the same day. Tasks with no set hour are treated as "all day" (00:00).
+const deadlineKey = (t: TaskItem) => `${t.deadline}T${t.time || '00:00'}`
+
 function sortTasks(tasks: TaskItem[], mode: SortMode): TaskItem[] {
   const arr = [...tasks]
   arr.sort((a, b) => {
@@ -30,15 +35,15 @@ function sortTasks(tasks: TaskItem[], mode: SortMode): TaskItem[] {
     if (doneDiff !== 0) return doneDiff
     switch (mode) {
       case 'priorytet':
-        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.deadline.localeCompare(b.deadline)
+        return priorityOrder[a.priority] - priorityOrder[b.priority] || deadlineKey(a).localeCompare(deadlineKey(b))
       case 'termin':
-        return a.deadline.localeCompare(b.deadline)
+        return deadlineKey(a).localeCompare(deadlineKey(b))
       case 'az':
         return a.title.localeCompare(b.title, 'pl')
       case 'custom':
         return a.sortOrder - b.sortOrder
       default:
-        return priorityOrder[a.priority] - priorityOrder[b.priority] || a.deadline.localeCompare(b.deadline)
+        return priorityOrder[a.priority] - priorityOrder[b.priority] || deadlineKey(a).localeCompare(deadlineKey(b))
     }
   })
   return arr
