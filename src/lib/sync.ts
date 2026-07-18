@@ -17,6 +17,7 @@ const SYNC_KEYS = [
   'invoiceCounter',
   'protocolCounter',
   'pin',
+  'monthlyGoal',
 ] as const
 
 type SyncedState = Pick<AppState, (typeof SYNC_KEYS)[number]>

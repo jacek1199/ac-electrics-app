@@ -15,20 +15,6 @@ import { IconBolt, IconChecklist, IconClock } from '../components/layout/icons'
 import { Link } from 'react-router-dom'
 import { CalendarCard } from '../components/dashboard/CalendarCard'
 
-const GOAL_KEY = 'ac-electrics-monthly-goal'
-
-function usePersistentGoal(): [number, (n: number) => void] {
-  const [goal, setGoalState] = useState<number>(() => {
-    const raw = localStorage.getItem(GOAL_KEY)
-    return raw ? Number(raw) : 15000
-  })
-  const setGoal = (n: number) => {
-    setGoalState(n)
-    localStorage.setItem(GOAL_KEY, String(n))
-  }
-  return [goal, setGoal]
-}
-
 function PowerGauge({ value, goal }: { value: number; goal: number }) {
   const pct = Math.max(0, Math.min(1, goal > 0 ? value / goal : 0))
   const r = 72
@@ -74,7 +60,8 @@ export function Dashboard() {
   const transactions = useStore((s) => s.transactions)
   const employees = useStore((s) => s.employees)
   const tasks = useStore((s) => s.tasks)
-  const [goal, setGoal] = usePersistentGoal()
+  const goal = useStore((s) => s.monthlyGoal)
+  const setGoal = useStore((s) => s.updateMonthlyGoal)
   const [editingGoal, setEditingGoal] = useState(false)
 
   const now = new Date()

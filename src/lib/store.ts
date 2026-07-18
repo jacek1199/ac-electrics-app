@@ -223,6 +223,7 @@ export function backfillDefaults(data: Partial<AppState>): Partial<AppState> {
   }
   if (!out.coupons) out.coupons = []
   if (!out.notes) out.notes = []
+  if (out.monthlyGoal == null) out.monthlyGoal = 15000
   return out
 }
 
@@ -243,6 +244,8 @@ export interface AppState {
   protocolCounter: number
   pin: string
   setPin: (pin: string) => void
+  monthlyGoal: number
+  updateMonthlyGoal: (n: number) => void
 
   addOrder: (o: Order) => void
   updateOrder: (o: Order) => void
@@ -317,6 +320,8 @@ export const useStore = create<AppState>()(
       protocolCounter: 1,
       pin: '9282',
       setPin: (pin) => set({ pin }),
+      monthlyGoal: 15000,
+      updateMonthlyGoal: (n) => set({ monthlyGoal: n }),
 
       addOrder: (o) => set((s) => ({ orders: [o, ...s.orders] })),
       updateOrder: (o) => set((s) => ({ orders: s.orders.map((x) => (x.id === o.id ? o : x)) })),
