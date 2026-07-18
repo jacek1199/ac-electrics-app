@@ -8,9 +8,11 @@ import { LocationPicker } from '../map/LocationPicker'
 import { computeOrderProfit } from '../../lib/calc'
 import { fmtPLN } from '../../lib/calc'
 import { RateSuggestion } from '../ui/RateSuggestion'
+import { AttachmentsField } from '../ui/AttachmentsField'
 import { IconTrash, IconCheck, IconClock, IconX as IconCancel, IconPlus, IconShopping } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+import { deleteAttachmentFile } from '../../lib/attachments'
 
 const canSave = (d: Order) => d.title.trim().length > 0
 
@@ -92,6 +94,7 @@ export function OrderForm({ order, onClose }: { order: Order; onClose: () => voi
     const ok = await confirmAction('Czy na pewno usunąć to zlecenie? Tej operacji nie można cofnąć.', 'Usuń zlecenie')
     if (!ok) return
     removeOrder(draft.id)
+    draft.attachments.forEach((a) => deleteAttachmentFile(a.path))
     pushToast('Zlecenie usunięte', 'info')
     onClose()
   }
@@ -304,6 +307,7 @@ export function OrderForm({ order, onClose }: { order: Order; onClose: () => voi
       )}
 
       <Textarea label="Notatki" value={draft.notes} onChange={(e) => set('notes', e.target.value)} />
+      <AttachmentsField value={draft.attachments} onChange={(v) => set('attachments', v)} folder={`orders/${draft.id}`} />
       <p className="text-xs text-ink-500">Zlecenie zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">

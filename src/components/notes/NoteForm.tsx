@@ -4,9 +4,11 @@ import { useStore } from '../../lib/store'
 import { useAutosave } from '../../lib/useAutosave'
 import { Input, Textarea } from '../ui/Field'
 import { Button } from '../ui/Button'
+import { AttachmentsField } from '../ui/AttachmentsField'
 import { IconTrash } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+import { deleteAttachmentFile } from '../../lib/attachments'
 
 const canSave = (d: Note) => d.title.trim().length > 0 || d.content.trim().length > 0
 
@@ -45,6 +47,7 @@ export function NoteForm({ note, onClose }: { note: Note; onClose: () => void })
     const ok = await confirmAction('Usunąć tę notatkę?', 'Usuń notatkę')
     if (!ok) return
     removeNote(draft.id)
+    draft.attachments.forEach((a) => deleteAttachmentFile(a.path))
     pushToast('Usunięto', 'info')
     onClose()
   }
@@ -57,6 +60,7 @@ export function NoteForm({ note, onClose }: { note: Note; onClose: () => void })
         <input type="checkbox" checked={draft.pinned} onChange={(e) => set('pinned', e.target.checked)} className="accent-gold w-4 h-4" />
         Przypnij na górze
       </label>
+      <AttachmentsField value={draft.attachments} onChange={(v) => set('attachments', v)} folder={`notes/${draft.id}`} />
       <p className="text-xs text-ink-500">Notatka zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">

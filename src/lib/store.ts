@@ -15,6 +15,7 @@ import type {
   OrderCosts,
   Coupon,
   Note,
+  DocumentFile,
 } from './types'
 
 const defaultCosts: OrderCosts = { materials: 0, labor: 0, fuel: 0, taxPercent: 0, other: 0 }
@@ -41,6 +42,7 @@ export const emptyOrder = (): Order => ({
   notes: '',
   notifiedDayBefore: false,
   notifiedDayOf: false,
+  attachments: [],
 })
 
 export const emptyTransaction = (type: Transaction['type']): Transaction => ({
@@ -83,6 +85,7 @@ export const emptyTask = (): TaskItem => ({
   notifiedDayBefore: false,
   notifiedDayOf: false,
   sortOrder: Date.now(),
+  attachments: [],
 })
 
 export const emptyContact = (): Contact => ({
@@ -111,6 +114,7 @@ export const emptyShoppingItem = (): ShoppingItem => ({
   date: new Date().toISOString().slice(0, 10),
   sortOrder: Date.now(),
   relatedOrderId: undefined,
+  attachments: [],
 })
 
 export const emptyWarehouseItem = (): WarehouseItem => ({
@@ -124,6 +128,7 @@ export const emptyWarehouseItem = (): WarehouseItem => ({
   note: '',
   sortOrder: Date.now(),
   priority: 'sredni',
+  attachments: [],
 })
 
 export const emptyCoupon = (): Coupon => ({
@@ -144,6 +149,7 @@ export const emptyNote = (): Note => ({
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   pinned: false,
+  attachments: [],
 })
 
 export const emptyInvoice = (): Invoice => ({
@@ -208,21 +214,26 @@ export function backfillDefaults(data: Partial<AppState>): Partial<AppState> {
           time: '',
           notifiedHourBefore: false,
           notifiedAtTime: false,
+          attachments: [],
           ...(t as Partial<TaskItem>),
         }) as TaskItem,
     )
   }
   if (out.shopping) {
-    out.shopping = out.shopping.map((i, idx) => ({ priority: 'sredni' as const, sortOrder: idx, ...(i as Partial<ShoppingItem>) }) as ShoppingItem)
+    out.shopping = out.shopping.map((i, idx) => ({ priority: 'sredni' as const, sortOrder: idx, attachments: [], ...(i as Partial<ShoppingItem>) }) as ShoppingItem)
   }
   if (out.warehouse) {
-    out.warehouse = out.warehouse.map((i, idx) => ({ sortOrder: idx, priority: 'sredni' as const, ...(i as Partial<WarehouseItem>) }) as WarehouseItem)
+    out.warehouse = out.warehouse.map((i, idx) => ({ sortOrder: idx, priority: 'sredni' as const, attachments: [], ...(i as Partial<WarehouseItem>) }) as WarehouseItem)
   }
   if (out.orders) {
-    out.orders = out.orders.map((o) => ({ discountPercent: 0, ...(o as Partial<Order>) }) as Order)
+    out.orders = out.orders.map((o) => ({ discountPercent: 0, attachments: [], ...(o as Partial<Order>) }) as Order)
+  }
+  if (out.notes) {
+    out.notes = out.notes.map((n) => ({ attachments: [], ...(n as Partial<Note>) }) as Note)
   }
   if (!out.coupons) out.coupons = []
   if (!out.notes) out.notes = []
+  if (!out.documents) out.documents = []
   if (out.monthlyGoal == null) out.monthlyGoal = 15000
   return out
 }
@@ -240,6 +251,7 @@ export interface AppState {
   protocols: Protocol[]
   coupons: Coupon[]
   notes: Note[]
+  documents: DocumentFile[]
   invoiceCounter: number
   protocolCounter: number
   pin: string
@@ -298,6 +310,9 @@ export interface AppState {
   updateNote: (n: Note) => void
   removeNote: (id: string) => void
 
+  addDocument: (d: DocumentFile) => void
+  removeDocument: (id: string) => void
+
   importAll: (data: Partial<AppState>) => void
 }
 
@@ -316,6 +331,7 @@ export const useStore = create<AppState>()(
       protocols: [],
       coupons: [],
       notes: [],
+      documents: [],
       invoiceCounter: 1,
       protocolCounter: 1,
       pin: '9282',
@@ -393,6 +409,9 @@ export const useStore = create<AppState>()(
       addNote: (n) => set((s) => ({ notes: [n, ...s.notes] })),
       updateNote: (n) => set((s) => ({ notes: s.notes.map((x) => (x.id === n.id ? n : x)) })),
       removeNote: (id) => set((s) => ({ notes: s.notes.filter((x) => x.id !== id) })),
+
+      addDocument: (d) => set((s) => ({ documents: [d, ...s.documents] })),
+      removeDocument: (id) => set((s) => ({ documents: s.documents.filter((x) => x.id !== id) })),
 
       importAll: (data) => set(() => ({ ...data }) as AppState),
     }),

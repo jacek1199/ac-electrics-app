@@ -4,9 +4,11 @@ import { useStore } from '../../lib/store'
 import { useAutosave } from '../../lib/useAutosave'
 import { Input, Select, Textarea } from '../ui/Field'
 import { Button } from '../ui/Button'
+import { AttachmentsField } from '../ui/AttachmentsField'
 import { IconTrash } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+import { deleteAttachmentFile } from '../../lib/attachments'
 
 const canSave = (d: TaskItem) => d.title.trim().length > 0
 
@@ -46,6 +48,7 @@ export function TaskForm({ task, onClose }: { task: TaskItem; onClose: () => voi
     const ok = await confirmAction('Usunąć to zadanie?', 'Usuń zadanie')
     if (!ok) return
     removeTask(draft.id)
+    draft.attachments.forEach((a) => deleteAttachmentFile(a.path))
     pushToast('Zadanie usunięte', 'info')
     onClose()
   }
@@ -77,6 +80,7 @@ export function TaskForm({ task, onClose }: { task: TaskItem; onClose: () => voi
         <input type="checkbox" checked={draft.done} onChange={(e) => set('done', e.target.checked)} className="accent-gold w-4 h-4" />
         Zadanie ukończone
       </label>
+      <AttachmentsField value={draft.attachments} onChange={(v) => set('attachments', v)} folder={`tasks/${draft.id}`} />
       <p className="text-xs text-ink-500">Zadanie zapisuje się automatycznie w trakcie pisania.</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-navy-700">

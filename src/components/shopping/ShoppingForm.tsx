@@ -4,9 +4,11 @@ import { useStore } from '../../lib/store'
 import { useAutosave } from '../../lib/useAutosave'
 import { Input, Select } from '../ui/Field'
 import { Button } from '../ui/Button'
+import { AttachmentsField } from '../ui/AttachmentsField'
 import { IconTrash } from '../layout/icons'
 import { confirmAction } from '../ui/confirmBus'
 import { pushToast } from '../ui/toastBus'
+import { deleteAttachmentFile } from '../../lib/attachments'
 
 const canSave = (d: ShoppingItem) => d.name.trim().length > 0
 
@@ -44,6 +46,7 @@ export function ShoppingForm({ item, onClose }: { item: ShoppingItem; onClose: (
     const ok = await confirmAction('Usunąć tę pozycję z listy zakupów?', 'Usuń pozycję')
     if (!ok) return
     removeShoppingItem(draft.id)
+    draft.attachments.forEach((a) => deleteAttachmentFile(a.path))
     pushToast('Usunięto', 'info')
     onClose()
   }
@@ -68,6 +71,7 @@ export function ShoppingForm({ item, onClose }: { item: ShoppingItem; onClose: (
         <option value="niski">Niski</option>
       </Select>
       <Input label="Notatka" value={draft.note} onChange={(e) => set('note', e.target.value)} />
+      <AttachmentsField value={draft.attachments} onChange={(v) => set('attachments', v)} folder={`shopping/${draft.id}`} />
       <p className="text-xs text-ink-500">
         Zapisuje się automatycznie w trakcie pisania. Status "kupione" zaznaczasz na liście zakupów (odhaczenie automatycznie dodaje wydatek).
       </p>

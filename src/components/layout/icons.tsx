@@ -107,3 +107,21 @@ export const IconNote = (p: SVGProps<SVGSVGElement>) => (
 export const IconCoupon = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M3 9a2 2 0 0 1 0 6" /><path d="M3 9V6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a2 2 0 0 1 0 6v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3" /><path d="M14 5v14" strokeDasharray="2.5 2.5" /></svg>
 )
+export const IconPaperclip = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M21 12.5 12.5 21a5 5 0 0 1-7-7L14 5.5a3.5 3.5 0 0 1 5 5L10.5 19a2 2 0 0 1-3-3L15 8.5" /></svg>
+)
+export const IconImage = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="m21 16-5.5-5.5L4 21" /></svg>
+)
+export const IconVideo = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><rect x="2" y="6" width="14" height="12" rx="2" /><path d="m16 10 6-3.5v11L16 14" /></svg>
+)
+export const IconFolder = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M3 6a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" /></svg>
+)
+export const IconFile = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M6 2h9l3 3v17H6Z" /><path d="M15 2v3h3" /></svg>
+)
+export const IconUpload = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M12 21V9" /><path d="m7 14 5-5 5 5" /><path d="M5 21h14" /></svg>
+)

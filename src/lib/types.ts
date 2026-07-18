@@ -1,3 +1,19 @@
+export interface FileAttachment {
+  id: string
+  name: string
+  url: string
+  path: string
+  mimeType: string
+  size: number
+  uploadedAt: string
+}
+
+export type DocumentCategory = 'faktura' | 'umowa' | 'inne'
+
+export interface DocumentFile extends FileAttachment {
+  category: DocumentCategory
+}
+
 export type OrderStatus = 'nowe' | 'w_trakcie' | 'zakonczone' | 'anulowane'
 export type IncomeSource = 'klasyczne' | 'odwrocone' | 'inne'
 export type PaymentMethod = 'gotowka' | 'przelew' | 'karta' | 'inne'
@@ -44,6 +60,7 @@ export interface Order {
   notes: string
   notifiedDayBefore: boolean
   notifiedDayOf: boolean
+  attachments: FileAttachment[]
 }
 
 export interface Transaction {
@@ -90,6 +107,7 @@ export interface TaskItem {
   notifiedDayBefore: boolean
   notifiedDayOf: boolean
   sortOrder: number
+  attachments: FileAttachment[]
 }
 
 export type ContactType = 'klient' | 'partner' | 'wspolnik' | 'pracownik' | 'inne'
@@ -124,6 +142,7 @@ export interface ShoppingItem {
   date: string
   sortOrder: number
   relatedOrderId?: string
+  attachments: FileAttachment[]
 }
 
 export type WarehouseCategory = 'sprzet' | 'materialy' | 'auta' | 'nieruchomosci' | 'inne'
@@ -139,6 +158,7 @@ export interface WarehouseItem {
   note: string
   sortOrder: number
   priority: Priority
+  attachments: FileAttachment[]
 }
 
 export type CouponType = 'znizka_kolejna_usluga' | 'zwrot_polecenie'
@@ -161,6 +181,7 @@ export interface Note {
   createdAt: string
   updatedAt: string
   pinned: boolean
+  attachments: FileAttachment[]
 }
 
 export interface CompanyInfo {

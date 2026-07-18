@@ -16,6 +16,7 @@ import { Warehouse } from './pages/Warehouse'
 import { CompanyInfoPage } from './pages/CompanyInfo'
 import { Notes } from './pages/Notes'
 import { Coupons } from './pages/Coupons'
+import { Documents } from './pages/Documents'
 import { LockScreen } from './components/lock/LockScreen'
 import { subscribeLock } from './lib/lockBus'
 import { initSync } from './lib/sync'
@@ -66,6 +67,7 @@ function App() {
           <Route path="/zakupy" element={<Shopping />} />
           <Route path="/magazyn" element={<Warehouse />} />
           <Route path="/notatnik" element={<Notes />} />
+          <Route path="/dokumenty" element={<Documents />} />
           <Route path="/kupony" element={<Coupons />} />
           <Route path="/firma" element={<CompanyInfoPage />} />
         </Route>

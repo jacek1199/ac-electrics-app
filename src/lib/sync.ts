@@ -14,6 +14,7 @@ const SYNC_KEYS = [
   'protocols',
   'coupons',
   'notes',
+  'documents',
   'invoiceCounter',
   'protocolCounter',
   'pin',
