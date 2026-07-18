@@ -9,7 +9,7 @@ import { StatusBadge, SourceBadge } from '../components/ui/Badge'
 import { EmptyState } from '../components/ui/EmptyState'
 import { SortSelect } from '../components/ui/SortSelect'
 import { OrderForm } from '../components/orders/OrderForm'
-import { computeOrderProfit, fmtPLN, fmtDate } from '../lib/calc'
+import { computeOrderProfit, fmtPLN, fmtDate, orderStatusPriority } from '../lib/calc'
 import { IconBolt, IconPlus, IconMapPin, IconUsers } from '../components/layout/icons'
 
 type SortMode = 'najnowsze' | 'az' | 'cena_rosnaco' | 'cena_malejaco'
@@ -20,15 +20,6 @@ const sortOptions = [
   { value: 'cena_rosnaco', label: 'Cena rosnąco' },
   { value: 'cena_malejaco', label: 'Cena malejąco' },
 ]
-
-// W trakcie wypływają na górę jako najpilniejsze, potem nowe, a zakończone
-// i anulowane spływają na dół jako już nieaktywne.
-const orderStatusPriority: Record<OrderStatus, number> = {
-  w_trakcie: 0,
-  nowe: 1,
-  zakonczone: 2,
-  anulowane: 3,
-}
 
 export function Orders() {
   const orders = useStore((s) => s.orders)

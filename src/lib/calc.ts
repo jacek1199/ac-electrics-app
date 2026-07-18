@@ -1,4 +1,22 @@
-import type { Order, Transaction, Employee, IncomeSource } from './types'
+import type { Order, OrderStatus, Transaction, Employee, IncomeSource } from './types'
+
+// W trakcie wypływają na górę jako najpilniejsze, potem nowe, a zakończone
+// i anulowane spływają na dół jako już nieaktywne. Używane wszędzie tam,
+// gdzie lista zleceń ma wyglądać tak samo jak w module Zlecenia.
+export const orderStatusPriority: Record<OrderStatus, number> = {
+  w_trakcie: 0,
+  nowe: 1,
+  zakonczone: 2,
+  anulowane: 3,
+}
+
+export function sortOrdersLikeOrdersPage(orders: Order[]): Order[] {
+  return [...orders].sort(
+    (a, b) =>
+      orderStatusPriority[a.status] - orderStatusPriority[b.status] ||
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  )
+}
 
 export interface OrderProfit {
   grossPrice: number

@@ -6,7 +6,7 @@ import { Button } from '../components/ui/Button'
 import { MonthNav } from '../components/ui/MonthNav'
 import { StatusBadge, SourceBadge } from '../components/ui/Badge'
 import { EmptyState } from '../components/ui/EmptyState'
-import { summarizePeriod, isInMonth, isInYear, monthKey, monthNames, computeOrderProfit, fmtPLN, fmtDate } from '../lib/calc'
+import { summarizePeriod, isInMonth, isInYear, monthKey, monthNames, computeOrderProfit, fmtPLN, fmtDate, sortOrdersLikeOrdersPage } from '../lib/calc'
 import { generateReportPdf } from '../lib/pdf'
 import { IconDownload, IconReport } from '../components/layout/icons'
 import { pushToast } from '../components/ui/toastBus'
@@ -28,7 +28,7 @@ export function Reports() {
   const periodLabel = mode === 'miesiac' ? `${monthNames[month]} ${year}` : `Rok ${year}`
 
   const periodOrders = useMemo(
-    () => orders.filter((o) => predicate(o.completedAt || o.deadline || o.createdAt)),
+    () => sortOrdersLikeOrdersPage(orders.filter((o) => predicate(o.completedAt || o.deadline || o.createdAt))),
     [orders, year, month, mode],
   )
 
