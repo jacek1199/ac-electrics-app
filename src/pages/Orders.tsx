@@ -15,11 +15,20 @@ import { IconBolt, IconPlus, IconMapPin, IconUsers } from '../components/layout/
 type SortMode = 'najnowsze' | 'az' | 'cena_rosnaco' | 'cena_malejaco'
 
 const sortOptions = [
-  { value: 'najnowsze', label: 'Najnowsze' },
+  { value: 'najnowsze', label: 'Automatycznie (status, najnowsze)' },
   { value: 'az', label: 'Nazwa A-Z' },
   { value: 'cena_rosnaco', label: 'Cena rosnąco' },
   { value: 'cena_malejaco', label: 'Cena malejąco' },
 ]
+
+// W trakcie wypływają na górę jako najpilniejsze, potem nowe, a zakończone
+// i anulowane spływają na dół jako już nieaktywne.
+const orderStatusPriority: Record<OrderStatus, number> = {
+  w_trakcie: 0,
+  nowe: 1,
+  zakonczone: 2,
+  anulowane: 3,
+}
 
 export function Orders() {
   const orders = useStore((s) => s.orders)
@@ -48,7 +57,10 @@ export function Orders() {
           case 'cena_malejaco':
             return b.price - a.price
           default:
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            return (
+              orderStatusPriority[a.status] - orderStatusPriority[b.status] ||
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            )
         }
       })
   }, [orders, statusFilter, sourceFilter, search, sortMode])
