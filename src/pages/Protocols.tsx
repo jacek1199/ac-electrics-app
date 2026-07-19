@@ -41,11 +41,11 @@ export function Protocols() {
           <div className="divide-y divide-navy-800">
             {sorted.map((p) => (
               <div key={p.id} onClick={() => setEditing(p)} className="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-navy-800/60 cursor-pointer transition-colors">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium text-ink-100">{p.number || 'Bez numeru'}</div>
                   <div className="text-xs text-ink-500 truncate">{p.client || 'Brak klienta'} · {fmtDate(p.date)}</div>
                 </div>
-                <div className="text-xs text-ink-500 shrink-0">{p.location}</div>
+                <div className="text-xs text-ink-500 truncate max-w-[40%] shrink text-right">{p.location}</div>
               </div>
             ))}
           </div>
