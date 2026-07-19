@@ -41,11 +41,11 @@ export function Statements() {
           <div className="divide-y divide-navy-800">
             {sorted.map((s) => (
               <div key={s.id} onClick={() => setEditing(s)} className="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-navy-800/60 cursor-pointer transition-colors">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium text-ink-100">{s.number || 'Bez numeru'}</div>
                   <div className="text-xs text-ink-500 truncate">{s.clientName || 'Brak klienta'} · {fmtDate(s.date)}</div>
                 </div>
-                <div className="text-xs text-ink-500 shrink-0">{s.location}</div>
+                <div className="text-xs text-ink-500 truncate max-w-[40%] shrink text-right">{s.location}</div>
               </div>
             ))}
           </div>
