@@ -69,10 +69,24 @@ async function pullRemote(): Promise<void> {
 
 async function pushToRemote() {
   try {
+    if (!lastKnownUpdatedAt) {
+      // No confirmed baseline for this session — e.g. this device was
+      // offline when it started up, so it never got to compare notes with
+      // the server. Pulling first (instead of skipping the WHERE-condition
+      // and writing unconditionally) guarantees we never blindly overwrite
+      // changes made elsewhere while we were out of sync. Losing whatever
+      // local edit triggered this push is an acceptable, rare trade-off —
+      // silently wiping shared company data is not.
+      await pullRemote()
+      return
+    }
     const nowIso = new Date().toISOString()
-    let query = supabase.from('app_state').update({ data: snapshot(), updated_at: nowIso }).eq('id', 1)
-    if (lastKnownUpdatedAt) query = query.eq('updated_at', lastKnownUpdatedAt)
-    const { data, error } = await query.select('updated_at')
+    const { data, error } = await supabase
+      .from('app_state')
+      .update({ data: snapshot(), updated_at: nowIso })
+      .eq('id', 1)
+      .eq('updated_at', lastKnownUpdatedAt)
+      .select('updated_at')
     if (error) return
     if (!data || data.length === 0) {
       // Someone else changed the shared data since we last saw it — pull
@@ -86,10 +100,7 @@ async function pushToRemote() {
   }
 }
 
-export async function initSync(): Promise<void> {
-  if (initialized) return
-  initialized = true
-
+async function pullOrBootstrap(): Promise<void> {
   try {
     const { data, error } = await supabase.from('app_state').select('data, updated_at').eq('id', 1).single()
     if (!error && data) {
@@ -101,8 +112,17 @@ export async function initSync(): Promise<void> {
       }
     }
   } catch {
-    /* offline on startup — keep working from local cache */
+    /* offline on startup — keep working from local cache. pushToRemote()
+       always pulls fresh before ever writing while lastKnownUpdatedAt is
+       unset, and the listeners below retry this pull once we're back. */
   }
+}
+
+export async function initSync(): Promise<void> {
+  if (initialized) return
+  initialized = true
+
+  await pullOrBootstrap()
 
   supabase
     .channel('app_state_sync')
@@ -119,5 +139,17 @@ export async function initSync(): Promise<void> {
     if (applyingRemote) return
     if (pushTimer) window.clearTimeout(pushTimer)
     pushTimer = window.setTimeout(pushToRemote, 800)
+  })
+
+  // Mobile browsers routinely suspend the realtime WebSocket while the PWA
+  // is backgrounded (screen locked, app switched away) without surfacing an
+  // error, so changes made elsewhere never arrive. Re-pull whenever the tab
+  // becomes visible again so a phone that's been asleep catches up instead
+  // of silently sitting on stale data.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') pullRemote()
+  })
+  window.addEventListener('online', () => {
+    if (!lastKnownUpdatedAt) pullOrBootstrap()
   })
 }
