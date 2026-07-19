@@ -37,12 +37,31 @@ function snapshot(): SyncedState {
 
 function isEmptySnapshot(data: Partial<SyncedState> | null | undefined): boolean {
   if (!data) return true
-  return !data.orders && !data.employees && !data.contacts && !data.invoices
+  // Only treat the remote row as "nothing here yet" (safe to push local data
+  // up) if every list is actually empty — checking just a handful of keys
+  // meant a business that had, say, emptied its orders/employees/contacts/
+  // invoices but still had real tasks or notes would look "empty" and get
+  // those overwritten by whatever a fresh device happened to have locally.
+  const listKeys = [
+    'orders', 'transactions', 'employees', 'tasks', 'contacts', 'shopping',
+    'warehouse', 'invoices', 'protocols', 'coupons', 'notes', 'documents', 'statements',
+  ] as const
+  return listKeys.every((k) => !data[k] || (data[k] as unknown[]).length === 0)
 }
 
 let applyingRemote = false
 let pushTimer: number | null = null
+let pushInFlight = false
 let initialized = false
+
+// True whenever a local change exists that the server doesn't have yet —
+// either still waiting out the debounce, or an update request already in
+// flight. Any incoming snapshot (realtime push, visibility/online re-pull)
+// must be ignored while this is true, or it would silently discard the
+// local edit before it ever reaches the server.
+function hasPendingLocalWrite(): boolean {
+  return pushTimer !== null || pushInFlight
+}
 
 // The last `updated_at` this client actually saw from the server. Every push
 // is conditioned on the row still having this value — if another client (or
@@ -68,6 +87,7 @@ async function pullRemote(): Promise<void> {
 }
 
 async function pushToRemote() {
+  pushInFlight = true
   try {
     if (!lastKnownUpdatedAt) {
       // No confirmed baseline for this session — e.g. this device was
@@ -97,6 +117,8 @@ async function pushToRemote() {
     lastKnownUpdatedAt = data[0].updated_at as string
   } catch {
     /* offline or unreachable — local data stays queued via the next change */
+  } finally {
+    pushInFlight = false
   }
 }
 
@@ -130,6 +152,11 @@ export async function initSync(): Promise<void> {
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'app_state', filter: 'id=eq.1' },
       (payload) => {
+        // A local edit that hasn't reached the server yet takes priority —
+        // applying this snapshot now would silently discard it. The pending
+        // push will resolve the conflict itself once it fires (succeed, or
+        // fail the optimistic-concurrency check and pull fresh).
+        if (hasPendingLocalWrite()) return
         applyRemoteSnapshot(payload.new.data as Partial<AppState>, payload.new.updated_at as string)
       },
     )
@@ -138,7 +165,10 @@ export async function initSync(): Promise<void> {
   useStore.subscribe(() => {
     if (applyingRemote) return
     if (pushTimer) window.clearTimeout(pushTimer)
-    pushTimer = window.setTimeout(pushToRemote, 800)
+    pushTimer = window.setTimeout(() => {
+      pushTimer = null
+      pushToRemote()
+    }, 800)
   })
 
   // Mobile browsers routinely suspend the realtime WebSocket while the PWA
@@ -147,9 +177,9 @@ export async function initSync(): Promise<void> {
   // becomes visible again so a phone that's been asleep catches up instead
   // of silently sitting on stale data.
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') pullRemote()
+    if (document.visibilityState === 'visible' && !hasPendingLocalWrite()) pullRemote()
   })
   window.addEventListener('online', () => {
-    if (!lastKnownUpdatedAt) pullOrBootstrap()
+    if (!lastKnownUpdatedAt && !hasPendingLocalWrite()) pullOrBootstrap()
   })
 }
