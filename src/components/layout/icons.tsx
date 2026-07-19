@@ -125,3 +125,6 @@ export const IconFile = (p: SVGProps<SVGSVGElement>) => (
 export const IconUpload = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M12 21V9" /><path d="m7 14 5-5 5 5" /><path d="M5 21h14" /></svg>
 )
+export const IconStatement = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M6 2h9l3 3v17H6Z" /><path d="M15 2v3h3" /><path d="M9 11h6M9 15h4" /><path d="m8.5 19.5 1.5 1.5 3-3" /></svg>
+)

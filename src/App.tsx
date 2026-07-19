@@ -8,6 +8,7 @@ import { Finance } from './pages/Finance'
 import { Reports } from './pages/Reports'
 import { Invoices } from './pages/Invoices'
 import { Protocols } from './pages/Protocols'
+import { Statements } from './pages/Statements'
 import { QuoteCalculator } from './pages/QuoteCalculator'
 import { Employees } from './pages/Employees'
 import { Contacts } from './pages/Contacts'
@@ -61,6 +62,7 @@ function App() {
           <Route path="/raporty" element={<Reports />} />
           <Route path="/faktury" element={<Invoices />} />
           <Route path="/protokoly" element={<Protocols />} />
+          <Route path="/oswiadczenia" element={<Statements />} />
           <Route path="/kalkulator" element={<QuoteCalculator />} />
           <Route path="/pracownicy" element={<Employees />} />
           <Route path="/kontakty" element={<Contacts />} />

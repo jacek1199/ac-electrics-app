@@ -241,3 +241,17 @@ export interface Protocol {
   contractorSignatureName: string
   notes: string
 }
+
+export interface Statement {
+  id: string
+  number: string
+  date: string
+  orderId?: string
+  clientName: string
+  clientAddress: string
+  location: string
+  scopeDescription: string
+  clientSignatureName: string
+  contractorSignatureName: string
+  notes: string
+}

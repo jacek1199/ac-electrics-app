@@ -3,7 +3,7 @@ import autoTable from 'jspdf-autotable'
 import logoUrl from '../assets/logo-print.png'
 import interRegularUrl from '../assets/fonts/Inter-Regular.ttf'
 import interBoldUrl from '../assets/fonts/Inter-Bold.ttf'
-import type { CompanyInfo, Invoice, Protocol, Order } from './types'
+import type { CompanyInfo, Invoice, Protocol, Statement, Order } from './types'
 import { fmtDate, computeOrderProfit, fmtPLN, type PeriodSummary } from './calc'
 
 const NAVY: [number, number, number] = [7, 15, 28]
@@ -275,6 +275,99 @@ export async function generateProtocolPdf(protocol: Protocol, company: CompanyIn
   doc.setFontSize(9)
   doc.text(protocol.clientSignatureName || 'Podpis klienta', 20, y + 5)
   doc.text(protocol.contractorSignatureName || 'Podpis wykonawcy', 115, y + 5)
+
+  drawFooter(doc)
+  return doc
+}
+
+export async function generateStatementPdf(statement: Statement, company: CompanyInfo): Promise<jsPDF> {
+  const doc = await newBrandedDoc(`OŚWIADCZENIE ${statement.number}`, company)
+  let y = 42
+
+  doc.setFontSize(10)
+  const field = (label: string, value: string) => {
+    doc.setFont(FONT, 'bold')
+    doc.text(`${label}:`, 14, y)
+    doc.setFont(FONT, 'normal')
+    doc.text(doc.splitTextToSize(value || '—', 150), 55, y)
+    y += 7
+  }
+  field('Data', fmtDate(statement.date))
+  field('Miejsce', statement.location)
+  y += 3
+
+  doc.setFontSize(9)
+  doc.setTextColor(...GREY)
+  doc.text('ZLECENIODAWCA', 14, y)
+  doc.text('ZLECENIOBIORCA', 110, y)
+  y += 5
+  doc.setTextColor(...INK)
+  doc.setFont(FONT, 'bold')
+  doc.text(statement.clientName || '—', 14, y)
+  doc.text(company.name, 110, y)
+  doc.setFont(FONT, 'normal')
+  y += 5
+  doc.text(doc.splitTextToSize(statement.clientAddress || '', 85), 14, y)
+  doc.text(doc.splitTextToSize(company.address || '', 85), 110, y)
+  y += 12
+
+  const heading = (text: string) => {
+    doc.setFont(FONT, 'bold')
+    doc.setFontSize(10)
+    doc.text(text, 14, y)
+    y += 6
+    doc.setFont(FONT, 'normal')
+    doc.setFontSize(9.5)
+  }
+  const paragraph = (text: string) => {
+    const lines = doc.splitTextToSize(text, 182)
+    doc.text(lines, 14, y)
+    y += lines.length * 4.6 + 4
+  }
+
+  heading('§ 1. Przedmiot oświadczenia')
+  paragraph(
+    `Niniejsze oświadczenie dotyczy prac elektrycznych wykonywanych przez Zleceniobiorcę na zlecenie Zleceniodawcy w lokalizacji: ${statement.location || '—'}, obejmujących: ${(statement.scopeDescription || '—').trim().replace(/\.+$/, '')}.`,
+  )
+
+  heading('§ 2. Świadomość ryzyka')
+  paragraph(
+    'Zleceniodawca oświadcza, iż został poinformowany, że prace polegające na ingerencji w istniejącą instalację elektryczną oraz elementy budowlane (ściany, tynki, okładziny, sufity podwieszane itp.) niezbędne do jej prawidłowego wykonania mogą wiązać się z: (a) koniecznością naruszenia istniejących powłok i wykończeń w miejscach bezpośrednio związanych z zakresem prac, (b) ujawnieniem wcześniej nieznanych usterek, uszkodzeń lub nieprawidłowości instalacji elektrycznej powstałych przed rozpoczęciem prac przez Zleceniobiorcę.',
+  )
+
+  heading('§ 3. Zakres odpowiedzialności')
+  paragraph(
+    '1. Zleceniobiorca ponosi odpowiedzialność za szkody wyrządzone Zleceniodawcy w związku z nienależytym wykonaniem zobowiązania, zgodnie z art. 471 Kodeksu cywilnego, w zakresie wynikającym z winy umyślnej lub rażącego niedbalstwa Zleceniobiorcy.',
+  )
+  paragraph(
+    '2. Zleceniobiorca nie ponosi odpowiedzialności za szkody będące normalnym następstwem prawidłowo wykonanych prac (art. 361 § 1 Kodeksu cywilnego), w tym za konieczne naruszenie elementów wykończeniowych wskazanych w § 2 lit. a, o ile ich naprawa nie została odrębnie zlecona Zleceniobiorcy.',
+  )
+  paragraph(
+    '3. Zleceniodawca ponosi odpowiedzialność za szkody powstałe wskutek zatajenia przed Zleceniobiorcą informacji o stanie technicznym istniejącej instalacji, mających wpływ na prawidłowe wykonanie prac.',
+  )
+  paragraph(
+    '4. Postanowienia niniejszego oświadczenia nie wyłączają ani nie ograniczają odpowiedzialności Zleceniobiorcy za szkodę wyrządzoną umyślnie (art. 473 § 2 Kodeksu cywilnego) ani uprawnień Zleceniodawcy będącego konsumentem wynikających z powszechnie obowiązujących przepisów prawa, w szczególności ustawy o prawach konsumenta.',
+  )
+
+  heading('§ 4. Postanowienia końcowe')
+  paragraph('Oświadczenie sporządzono w dwóch jednobrzmiących egzemplarzach, po jednym dla każdej ze stron.')
+
+  if (statement.notes) {
+    doc.setFont(FONT, 'bold')
+    doc.text('Uwagi:', 14, y)
+    y += 6
+    doc.setFont(FONT, 'normal')
+    doc.text(doc.splitTextToSize(statement.notes, 182), 14, y)
+    y += 14
+  }
+
+  y = Math.max(y + 6, 245)
+  doc.setDrawColor(...GREY)
+  doc.line(20, y, 85, y)
+  doc.line(115, y, 180, y)
+  doc.setFontSize(9)
+  doc.text(statement.clientSignatureName || 'Podpis zleceniodawcy', 20, y + 5)
+  doc.text(statement.contractorSignatureName || 'Podpis zleceniobiorcy', 115, y + 5)
 
   drawFooter(doc)
   return doc

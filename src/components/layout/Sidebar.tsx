@@ -17,6 +17,7 @@ import {
   IconNote,
   IconCoupon,
   IconFolder,
+  IconStatement,
   IconX,
 } from './icons'
 
@@ -46,6 +47,7 @@ const groups: NavGroup[] = [
       { to: '/raporty', label: 'Raporty', icon: IconReport },
       { to: '/faktury', label: 'Faktury', icon: IconInvoice },
       { to: '/protokoly', label: 'Protokoły', icon: IconProtocol },
+      { to: '/oswiadczenia', label: 'Oświadczenia', icon: IconStatement },
       { to: '/kalkulator', label: 'Kalkulator wycen', icon: IconCalculator },
       { to: '/kupony', label: 'Kupony', icon: IconCoupon },
     ],

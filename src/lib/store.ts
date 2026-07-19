@@ -16,6 +16,7 @@ import type {
   Coupon,
   Note,
   DocumentFile,
+  Statement,
 } from './types'
 
 const defaultCosts: OrderCosts = { materials: 0, labor: 0, fuel: 0, taxPercent: 0, other: 0 }
@@ -179,6 +180,19 @@ export const emptyProtocol = (): Protocol => ({
   notes: '',
 })
 
+export const emptyStatement = (): Statement => ({
+  id: newId(),
+  number: '',
+  date: new Date().toISOString().slice(0, 10),
+  clientName: '',
+  clientAddress: '',
+  location: '',
+  scopeDescription: '',
+  clientSignatureName: '',
+  contractorSignatureName: 'A.C. Electrics',
+  notes: '',
+})
+
 const defaultCompanyInfo: CompanyInfo = {
   name: 'A.C. Electrics',
   nip: '',
@@ -234,6 +248,8 @@ export function backfillDefaults(data: Partial<AppState>): Partial<AppState> {
   if (!out.coupons) out.coupons = []
   if (!out.notes) out.notes = []
   if (!out.documents) out.documents = []
+  if (!out.statements) out.statements = []
+  if (out.statementCounter == null) out.statementCounter = 1
   if (out.monthlyGoal == null) out.monthlyGoal = 15000
   return out
 }
@@ -252,8 +268,10 @@ export interface AppState {
   coupons: Coupon[]
   notes: Note[]
   documents: DocumentFile[]
+  statements: Statement[]
   invoiceCounter: number
   protocolCounter: number
+  statementCounter: number
   pin: string
   setPin: (pin: string) => void
   monthlyGoal: number
@@ -302,6 +320,11 @@ export interface AppState {
   removeProtocol: (id: string) => void
   nextProtocolNumber: () => string
 
+  addStatement: (s: Statement) => void
+  updateStatement: (s: Statement) => void
+  removeStatement: (id: string) => void
+  nextStatementNumber: () => string
+
   addCoupon: (c: Coupon) => void
   updateCoupon: (c: Coupon) => void
   removeCoupon: (id: string) => void
@@ -332,8 +355,10 @@ export const useStore = create<AppState>()(
       coupons: [],
       notes: [],
       documents: [],
+      statements: [],
       invoiceCounter: 1,
       protocolCounter: 1,
+      statementCounter: 1,
       pin: '9282',
       setPin: (pin) => set({ pin }),
       monthlyGoal: 15000,
@@ -400,6 +425,17 @@ export const useStore = create<AppState>()(
         const d = new Date()
         set({ protocolCounter: n + 1 })
         return `PROT/${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(n).padStart(3, '0')}`
+      },
+
+      addStatement: (s) => set((st) => ({ statements: [s, ...st.statements] })),
+      updateStatement: (s) =>
+        set((st) => ({ statements: st.statements.map((x) => (x.id === s.id ? s : x)) })),
+      removeStatement: (id) => set((st) => ({ statements: st.statements.filter((x) => x.id !== id) })),
+      nextStatementNumber: () => {
+        const n = get().statementCounter
+        const d = new Date()
+        set({ statementCounter: n + 1 })
+        return `OSW/${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(n).padStart(3, '0')}`
       },
 
       addCoupon: (c) => set((s) => ({ coupons: [c, ...s.coupons] })),

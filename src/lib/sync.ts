@@ -15,8 +15,10 @@ const SYNC_KEYS = [
   'coupons',
   'notes',
   'documents',
+  'statements',
   'invoiceCounter',
   'protocolCounter',
+  'statementCounter',
   'pin',
   'monthlyGoal',
 ] as const
