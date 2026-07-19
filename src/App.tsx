@@ -19,8 +19,10 @@ import { Notes } from './pages/Notes'
 import { Coupons } from './pages/Coupons'
 import { Documents } from './pages/Documents'
 import { LockScreen } from './components/lock/LockScreen'
+import { UpdateBanner } from './components/layout/UpdateBanner'
 import { subscribeLock } from './lib/lockBus'
 import { initSync } from './lib/sync'
+import { initPwaUpdate } from './lib/pwaUpdate'
 
 const UNLOCK_KEY = 'ac-electrics-unlocked'
 
@@ -38,43 +40,50 @@ function App() {
 
   useEffect(() => {
     initSync()
+    initPwaUpdate()
   }, [])
 
   if (!unlocked) {
     return (
-      <LockScreen
-        onUnlock={() => {
-          sessionStorage.setItem(UNLOCK_KEY, '1')
-          setUnlocked(true)
-        }}
-      />
+      <>
+        <LockScreen
+          onUnlock={() => {
+            sessionStorage.setItem(UNLOCK_KEY, '1')
+            setUnlocked(true)
+          }}
+        />
+        <UpdateBanner />
+      </>
     )
   }
 
   return (
-    <HashRouter>
-      <Routes>
-        <Route element={<Shell />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/zlecenia" element={<Orders />} />
-          <Route path="/zadania" element={<Tasks />} />
-          <Route path="/finanse" element={<Finance />} />
-          <Route path="/raporty" element={<Reports />} />
-          <Route path="/faktury" element={<Invoices />} />
-          <Route path="/protokoly" element={<Protocols />} />
-          <Route path="/oswiadczenia" element={<Statements />} />
-          <Route path="/kalkulator" element={<QuoteCalculator />} />
-          <Route path="/pracownicy" element={<Employees />} />
-          <Route path="/kontakty" element={<Contacts />} />
-          <Route path="/zakupy" element={<Shopping />} />
-          <Route path="/magazyn" element={<Warehouse />} />
-          <Route path="/notatnik" element={<Notes />} />
-          <Route path="/dokumenty" element={<Documents />} />
-          <Route path="/kupony" element={<Coupons />} />
-          <Route path="/firma" element={<CompanyInfoPage />} />
-        </Route>
-      </Routes>
-    </HashRouter>
+    <>
+      <HashRouter>
+        <Routes>
+          <Route element={<Shell />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/zlecenia" element={<Orders />} />
+            <Route path="/zadania" element={<Tasks />} />
+            <Route path="/finanse" element={<Finance />} />
+            <Route path="/raporty" element={<Reports />} />
+            <Route path="/faktury" element={<Invoices />} />
+            <Route path="/protokoly" element={<Protocols />} />
+            <Route path="/oswiadczenia" element={<Statements />} />
+            <Route path="/kalkulator" element={<QuoteCalculator />} />
+            <Route path="/pracownicy" element={<Employees />} />
+            <Route path="/kontakty" element={<Contacts />} />
+            <Route path="/zakupy" element={<Shopping />} />
+            <Route path="/magazyn" element={<Warehouse />} />
+            <Route path="/notatnik" element={<Notes />} />
+            <Route path="/dokumenty" element={<Documents />} />
+            <Route path="/kupony" element={<Coupons />} />
+            <Route path="/firma" element={<CompanyInfoPage />} />
+          </Route>
+        </Routes>
+      </HashRouter>
+      <UpdateBanner />
+    </>
   )
 }
 

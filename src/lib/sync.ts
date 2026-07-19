@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient'
 import { useStore, backfillDefaults, type AppState } from './store'
+import { setSyncStatus } from './syncStatusBus'
 
 const SYNC_KEYS = [
   'orders',
@@ -88,6 +89,7 @@ async function pullRemote(): Promise<void> {
 
 async function pushToRemote() {
   pushInFlight = true
+  setSyncStatus('saving')
   try {
     if (!lastKnownUpdatedAt) {
       // No confirmed baseline for this session — e.g. this device was
@@ -98,6 +100,7 @@ async function pushToRemote() {
       // local edit triggered this push is an acceptable, rare trade-off —
       // silently wiping shared company data is not.
       await pullRemote()
+      setSyncStatus(lastKnownUpdatedAt ? 'saved' : 'offline')
       return
     }
     const nowIso = new Date().toISOString()
@@ -107,16 +110,22 @@ async function pushToRemote() {
       .eq('id', 1)
       .eq('updated_at', lastKnownUpdatedAt)
       .select('updated_at')
-    if (error) return
+    if (error) {
+      setSyncStatus('offline')
+      return
+    }
     if (!data || data.length === 0) {
       // Someone else changed the shared data since we last saw it — pull
       // fresh instead of overwriting so we never destroy their changes.
       await pullRemote()
+      setSyncStatus('saved')
       return
     }
     lastKnownUpdatedAt = data[0].updated_at as string
+    setSyncStatus('saved')
   } catch {
-    /* offline or unreachable — local data stays queued via the next change */
+    // offline or unreachable — local data stays queued via the next change
+    setSyncStatus('offline')
   } finally {
     pushInFlight = false
   }
@@ -132,11 +141,15 @@ async function pullOrBootstrap(): Promise<void> {
         lastKnownUpdatedAt = data.updated_at as string
         await pushToRemote()
       }
+      setSyncStatus('idle')
+    } else {
+      setSyncStatus('offline')
     }
   } catch {
-    /* offline on startup — keep working from local cache. pushToRemote()
-       always pulls fresh before ever writing while lastKnownUpdatedAt is
-       unset, and the listeners below retry this pull once we're back. */
+    // offline on startup — keep working from local cache. pushToRemote()
+    // always pulls fresh before ever writing while lastKnownUpdatedAt is
+    // unset, and the listeners below retry this pull once we're back.
+    setSyncStatus('offline')
   }
 }
 
@@ -164,11 +177,21 @@ export async function initSync(): Promise<void> {
 
   useStore.subscribe(() => {
     if (applyingRemote) return
+    setSyncStatus('saving')
     if (pushTimer) window.clearTimeout(pushTimer)
     pushTimer = window.setTimeout(() => {
       pushTimer = null
       pushToRemote()
     }, 800)
+  })
+
+  // Immediate feedback the moment connectivity actually drops, rather than
+  // only finding out on the next failed push attempt.
+  window.addEventListener('offline', () => setSyncStatus('offline'))
+  window.addEventListener('online', () => {
+    if (hasPendingLocalWrite()) return
+    if (!lastKnownUpdatedAt) pullOrBootstrap()
+    else setSyncStatus('idle')
   })
 
   // Mobile browsers routinely suspend the realtime WebSocket while the PWA
@@ -178,8 +201,5 @@ export async function initSync(): Promise<void> {
   // of silently sitting on stale data.
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && !hasPendingLocalWrite()) pullRemote()
-  })
-  window.addEventListener('online', () => {
-    if (!lastKnownUpdatedAt && !hasPendingLocalWrite()) pullOrBootstrap()
   })
 }

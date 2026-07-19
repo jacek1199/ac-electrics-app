@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { IconMenu, IconBell, IconLock } from './icons'
+import { IconMenu, IconBell, IconLock, IconWrench } from './icons'
 import { SaveIndicator } from './SaveIndicator'
 import {
   isNotificationSupported,
@@ -9,6 +9,8 @@ import {
 } from '../../lib/notifications'
 import { pushToast } from '../ui/toastBus'
 import { requestLock } from '../../lib/lockBus'
+import { repairApp } from '../../lib/repair'
+import { confirmAction } from '../ui/confirmBus'
 
 const titles: Record<string, string> = {
   '/': 'Pulpit',
@@ -62,6 +64,15 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
     }
   }
 
+  const handleRepair = async () => {
+    const ok = await confirmAction(
+      'Wyczyści pamięć podręczną aplikacji i odświeży panel. Użyj, jeśli coś wygląda nie tak lub nie widzisz najnowszych zmian.',
+      'Napraw wyświetlanie',
+      false,
+    )
+    if (ok) repairApp()
+  }
+
   return (
     <header className="safe-area-top sticky top-0 z-20 flex items-center justify-between gap-3 px-4 sm:px-6 pb-4 border-b border-navy-800 bg-navy-950/80 backdrop-blur-xl">
       <div className="flex items-center gap-3 min-w-0">
@@ -77,6 +88,13 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <SaveIndicator />
+        <button
+          onClick={handleRepair}
+          title="Napraw wyświetlanie"
+          className="w-9 h-9 rounded-lg flex items-center justify-center border border-navy-600 text-ink-300 hover:border-teal-bright/50 hover:text-teal-bright transition-colors"
+        >
+          <IconWrench className="w-[18px] h-[18px]" />
+        </button>
         <button
           onClick={handleBell}
           title="Powiadomienia dźwiękowe A.C. Electrics"

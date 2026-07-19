@@ -128,3 +128,12 @@ export const IconUpload = (p: SVGProps<SVGSVGElement>) => (
 export const IconStatement = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M6 2h9l3 3v17H6Z" /><path d="M15 2v3h3" /><path d="M9 11h6M9 15h4" /><path d="m8.5 19.5 1.5 1.5 3-3" /></svg>
 )
+export const IconCloudOff = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M22.61 16.95A5 5 0 0 0 18 9h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3" /><path d="M2 2l20 20" /></svg>
+)
+export const IconWrench = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94Z" /></svg>
+)
+export const IconRefresh = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M3 12a9 9 0 0 1 15.4-6.36L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-15.4 6.36L3 16" /><path d="M8 21H3v-5" /></svg>
+)
