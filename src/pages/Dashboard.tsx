@@ -70,7 +70,7 @@ export function Dashboard() {
   const mKey = monthKey(now)
 
   const monthSummary = useMemo(
-    () => summarizePeriod(orders, transactions, employees, (d) => isInMonth(d, y, m), mKey),
+    () => summarizePeriod(orders, transactions, employees, (d) => isInMonth(d, y, m), (k) => k === mKey),
     [orders, transactions, employees, y, m, mKey],
   )
   const yearSummary = useMemo(

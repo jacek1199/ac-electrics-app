@@ -25,6 +25,10 @@ export function Reports() {
 
   const predicate = mode === 'miesiac' ? (d: string) => isInMonth(d, year, month) : (d: string) => isInYear(d, year)
   const mKey = monthKey(new Date(year, month, 1))
+  // "Godziny pracy" needs to match every month's key when viewing a whole
+  // year — matching only the currently-selected month (a leftover from
+  // month mode) silently under-counted hours for the other 11 months.
+  const hoursMatch = mode === 'miesiac' ? (k: string) => k === mKey : (k: string) => k.startsWith(`${year}-`)
   const periodLabel = mode === 'miesiac' ? `${monthNames[month]} ${year}` : `Rok ${year}`
 
   const periodOrders = useMemo(
@@ -33,7 +37,7 @@ export function Reports() {
   )
 
   const summary = useMemo(
-    () => summarizePeriod(orders, transactions, employees, predicate, mKey),
+    () => summarizePeriod(orders, transactions, employees, predicate, hoursMatch),
     [orders, transactions, employees, year, month, mode],
   )
 

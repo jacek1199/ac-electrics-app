@@ -27,9 +27,10 @@ export function Finance() {
 
   const predicate = mode === 'miesiac' ? (d: string) => isInMonth(d, year, month) : (d: string) => isInYear(d, year)
   const mKey = monthKey(new Date(year, month, 1))
+  const hoursMatch = mode === 'miesiac' ? (k: string) => k === mKey : (k: string) => k.startsWith(`${year}-`)
 
   const summary = useMemo(
-    () => summarizePeriod(orders, transactions, employees, predicate, mKey),
+    () => summarizePeriod(orders, transactions, employees, predicate, hoursMatch),
     [orders, transactions, employees, year, month, mode],
   )
 

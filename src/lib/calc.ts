@@ -83,7 +83,7 @@ export function summarizePeriod(
   transactions: Transaction[],
   employees: Employee[],
   predicate: (dateStr: string) => boolean,
-  monthKeyFilter?: string,
+  monthKeyMatch?: (monthKey: string) => boolean,
 ): PeriodSummary {
   const incomeBySource = emptySourceMap()
   const profitBySource = emptySourceMap()
@@ -120,9 +120,11 @@ export function summarizePeriod(
   }
 
   let hoursWorked = 0
-  if (monthKeyFilter) {
+  if (monthKeyMatch) {
     for (const e of employees) {
-      hoursWorked += e.monthlyHours[monthKeyFilter] || 0
+      for (const [k, hours] of Object.entries(e.monthlyHours)) {
+        if (monthKeyMatch(k)) hoursWorked += hours || 0
+      }
     }
   }
 
