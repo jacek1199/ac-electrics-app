@@ -44,12 +44,43 @@ let applyingRemote = false
 let pushTimer: number | null = null
 let initialized = false
 
+// The last `updated_at` this client actually saw from the server. Every push
+// is conditioned on the row still having this value — if another client (or
+// an old/stale tab of this one) wrote in the meantime, the condition matches
+// zero rows and we pull fresh data instead of blindly overwriting it. Without
+// this, a tab left open for a long time with an outdated in-memory snapshot
+// (e.g. one that missed a realtime update) would silently wipe out newer
+// changes the next time it happened to push.
+let lastKnownUpdatedAt: string | null = null
+
+function applyRemoteSnapshot(data: Partial<AppState>, updatedAt: string) {
+  applyingRemote = true
+  useStore.setState(backfillDefaults(data))
+  applyingRemote = false
+  lastKnownUpdatedAt = updatedAt
+}
+
+async function pullRemote(): Promise<void> {
+  const { data, error } = await supabase.from('app_state').select('data, updated_at').eq('id', 1).single()
+  if (!error && data) {
+    applyRemoteSnapshot(data.data as Partial<AppState>, data.updated_at as string)
+  }
+}
+
 async function pushToRemote() {
   try {
-    await supabase
-      .from('app_state')
-      .update({ data: snapshot(), updated_at: new Date().toISOString() })
-      .eq('id', 1)
+    const nowIso = new Date().toISOString()
+    let query = supabase.from('app_state').update({ data: snapshot(), updated_at: nowIso }).eq('id', 1)
+    if (lastKnownUpdatedAt) query = query.eq('updated_at', lastKnownUpdatedAt)
+    const { data, error } = await query.select('updated_at')
+    if (error) return
+    if (!data || data.length === 0) {
+      // Someone else changed the shared data since we last saw it — pull
+      // fresh instead of overwriting so we never destroy their changes.
+      await pullRemote()
+      return
+    }
+    lastKnownUpdatedAt = data[0].updated_at as string
   } catch {
     /* offline or unreachable — local data stays queued via the next change */
   }
@@ -60,13 +91,14 @@ export async function initSync(): Promise<void> {
   initialized = true
 
   try {
-    const { data, error } = await supabase.from('app_state').select('data').eq('id', 1).single()
-    if (!error && !isEmptySnapshot(data?.data as Partial<SyncedState>)) {
-      applyingRemote = true
-      useStore.setState(backfillDefaults(data!.data as Partial<AppState>))
-      applyingRemote = false
-    } else {
-      await pushToRemote()
+    const { data, error } = await supabase.from('app_state').select('data, updated_at').eq('id', 1).single()
+    if (!error && data) {
+      if (!isEmptySnapshot(data.data as Partial<SyncedState>)) {
+        applyRemoteSnapshot(data.data as Partial<AppState>, data.updated_at as string)
+      } else {
+        lastKnownUpdatedAt = data.updated_at as string
+        await pushToRemote()
+      }
     }
   } catch {
     /* offline on startup — keep working from local cache */
@@ -78,9 +110,7 @@ export async function initSync(): Promise<void> {
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'app_state', filter: 'id=eq.1' },
       (payload) => {
-        applyingRemote = true
-        useStore.setState(backfillDefaults(payload.new.data as Partial<AppState>))
-        applyingRemote = false
+        applyRemoteSnapshot(payload.new.data as Partial<AppState>, payload.new.updated_at as string)
       },
     )
     .subscribe()
