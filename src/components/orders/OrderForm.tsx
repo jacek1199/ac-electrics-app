@@ -27,6 +27,7 @@ export function OrderForm({ order, onClose }: { order: Order; onClose: () => voi
   const removeOrder = useStore((s) => s.removeOrder)
   const addShoppingItem = useStore((s) => s.addShoppingItem)
   const removeShoppingItem = useStore((s) => s.removeShoppingItem)
+  const removeTransaction = useStore((s) => s.removeTransaction)
   const isNew = !useStore.getState().orders.some((o) => o.id === order.id)
   const wasNewRef = useRef(isNew)
 
@@ -62,6 +63,9 @@ export function OrderForm({ order, onClose }: { order: Order; onClose: () => voi
 
   const removePurchase = (item: ShoppingItem) => {
     removeShoppingItem(item.id)
+    // If this purchase was already marked "kupione" it booked its own
+    // expense in Finanse — otherwise that expense stays orphaned forever.
+    if (item.expenseTransactionId) removeTransaction(item.expenseTransactionId)
     setCosts('materials', Math.max(0, draft.costs.materials - item.price * item.quantity))
   }
 

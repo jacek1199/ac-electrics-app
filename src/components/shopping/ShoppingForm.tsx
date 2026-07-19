@@ -17,6 +17,8 @@ export function ShoppingForm({ item, onClose }: { item: ShoppingItem; onClose: (
   const addShoppingItem = useStore((s) => s.addShoppingItem)
   const updateShoppingItem = useStore((s) => s.updateShoppingItem)
   const removeShoppingItem = useStore((s) => s.removeShoppingItem)
+  const updateTransaction = useStore((s) => s.updateTransaction)
+  const removeTransaction = useStore((s) => s.removeTransaction)
   const isNew = !useStore.getState().shopping.some((s) => s.id === item.id)
   const wasNewRef = useRef(isNew)
 
@@ -28,6 +30,14 @@ export function ShoppingForm({ item, onClose }: { item: ShoppingItem; onClose: (
       wasNewRef.current = false
     } else {
       updateShoppingItem(d)
+    }
+    // The purchase amount is confirmed into Finanse as a transaction the
+    // moment "kupione" is checked — if the price/quantity/name is corrected
+    // afterwards, the already-booked expense must follow, or Finanse quietly
+    // keeps reporting the old amount forever.
+    if (d.bought && d.expenseTransactionId) {
+      const tx = useStore.getState().transactions.find((t) => t.id === d.expenseTransactionId)
+      if (tx) updateTransaction({ ...tx, amount: d.price * d.quantity, label: d.name })
     }
   }
   useAutosave(draft, canSave, persist)
@@ -46,6 +56,9 @@ export function ShoppingForm({ item, onClose }: { item: ShoppingItem; onClose: (
     const ok = await confirmAction('Usunąć tę pozycję z listy zakupów?', 'Usuń pozycję')
     if (!ok) return
     removeShoppingItem(draft.id)
+    // Otherwise a bought item's expense stays booked in Finanse forever,
+    // orphaned and referencing a shopping list entry that no longer exists.
+    if (draft.expenseTransactionId) removeTransaction(draft.expenseTransactionId)
     draft.attachments.forEach((a) => deleteAttachmentFile(a.path))
     pushToast('Usunięto', 'info')
     onClose()
